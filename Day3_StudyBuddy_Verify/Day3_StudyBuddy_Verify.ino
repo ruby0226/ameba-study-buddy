@@ -1,5 +1,6 @@
 // 讀書小夥伴；來源與限制見驗證文件
 #include "WiFi.h"
+#include "WiFiSecrets.h"
 #include "StreamIO.h"
 #include "VideoStream.h"
 #include "RTSP.h"
@@ -7,6 +8,9 @@
 #include "VideoStreamOverlay.h"
 #include "DetectionEvidence.h"
 #include "SceneRelations.h"
+#include "PetLife.h"
+#include "PetNetwork.h"
+#include "PetSound.h"
 using namespace SceneRelations;
 extern "C" {
 #include "FreeRTOS.h"
@@ -21,6 +25,23 @@ extern "C" {
 #define NNHEIGHT 320
 
 #define LOG_INTERVAL_MS 1000
+
+// 拍影片才改成 1，仍然靠真實辨識
+#ifndef PET_DEMO
+#define PET_DEMO 0
+#endif
+#if PET_DEMO
+PetLife::Clock petLife(60000, 10000, 30000);
+#else
+PetLife::Clock petLife(25UL * 60000, 5UL * 60000, 10UL * 60000);
+#endif
+PetNetwork petNetwork;
+unsigned long petEventId = 0;
+
+// 麥克風聽拍手和環境音量
+PetSound petSound;
+bool soundReady = false, lastNoisy = false;
+unsigned long lastClaps = 0;
 
 // 分數不夠就先不算
 #define NN_CONF_THRESH   0.25f
@@ -51,9 +72,9 @@ StreamIO videoStreamerNN(1, 1);
 RTSP rtsp;
 StreamIO videoStreamer(1, 1);
 
-// 填入自己的 Wi-Fi（2.4 GHz）
-char ssid[] = "YOUR_WIFI_SSID";
-char pass[] = "YOUR_WIFI_PASSWORD";
+// Wi-Fi 放在本機設定檔
+char ssid[] = WIFI_SSID;
+char pass[] = WIFI_PASSWORD;
 int status = WL_IDLE_STATUS;
 
 IPAddress ip;
@@ -91,6 +112,15 @@ struct Hold {
     unsigned long since = 0;
     unsigned long lastSeen = 0;
 };
+
+// 事件只送一次，網頁自己留紀錄
+void petEvent(const char *name, unsigned long now)
+{
+    char line[80];
+    snprintf(line, sizeof(line), "EVENT,%lu,%lu,%s", now, ++petEventId, name);
+    Serial.println(line);
+    petNetwork.event(petEventId, line);
+}
 
 const char *stateName(StudyState s)
 {
@@ -359,12 +389,19 @@ void setup()
     OSD.configVideo(CHANNEL, config);
     OSD.begin();
 
+    soundReady = petSound.begin();
+    if (!soundReady) Serial.println("ERROR,microphone start failed");
+
     printRtspUrl();
+    if (!petNetwork.begin(ssid, pass)) Serial.println("ERROR,web server task failed");
+    Serial.print("Pet web: http://");
+    Serial.print(ip);
+    Serial.println("/");
 
     // CSV 給校正看，STATE 給寵物看
     Serial.println("CSV,t_s,samples,person_hits,person_max,book_hits,book_max,phone_hits,phone_max,laptop_hits,laptop_max,face_hits,face_max,face_pitch,face_samples,object_age_ms,face_age_ms,book_stable,phone_stable,laptop_stable,interval_ms,book_threshold,phone_threshold,laptop_threshold,table_hits,table_max,keyboard_hits,keyboard_max,mouse_hits,mouse_max,remote_hits,remote_max,book_assist_hits,phone_assist_hits,phone_near_person,computer_context");
 
-    Serial.println("STATE,t_s,state,desk_s,study_s,computer_s,mode,away_count,last_away_s,head,headdown_s,remind,phone_present,phone_near_person");
+    Serial.println("STATE,t_s,state,desk_s,study_s,computer_s,mode,away_count,last_away_s,head,headdown_s,remind,phone_present,phone_near_person,mic_level,mic_peak,noisy");
     windowStart = millis();
     lastLoopMs = millis();
 }
@@ -410,7 +447,7 @@ void loop()
     }
     xSemaphoreGive(detectionMutex);
 
-    // 舊網頁傳的切換指令直接丟掉
+    // USB 只留除錯，不控制養成
     while (Serial.available() > 0) Serial.read();
 
     // 白框是有效目標，黃框是候選
@@ -477,7 +514,23 @@ void loop()
         seated = false;
     }
 
+    const bool webAlive = petNetwork.alive();
+    const PetLife::Presence presence = seatedNow ? PetLife::AT_DESK :
+        state == ST_AWAY ? PetLife::AWAY : PetLife::UNKNOWN;
+    const unsigned petEvents = petLife.tick(now, presence, objectFresh && webAlive);
+    const unsigned flags[] = {PetLife::WELCOME, PetLife::LEAVE, PetLife::REMIND,
+        PetLife::WEAK, PetLife::DIED, PetLife::RESTED, PetLife::REBORN};
+    const char *names[] = {"WELCOME", "LEAVE", "REMIND", "WEAK", "DIED", "RESTED", "REBORN"};
+    for (unsigned i = 0; i < 7; ++i) if (petEvents & flags[i]) petEvent(names[i], now);
     lastLoopMs = now;
+
+    // 麥克風在別的工作跑，這裡只轉成事件
+    if (soundReady) {
+        const unsigned long claps = petSound.claps;
+        if (claps != lastClaps) { lastClaps = claps; petEvent("CLAP", now); }
+        const bool noisy = petSound.noisy;
+        if (noisy != lastNoisy) { lastNoisy = noisy; petEvent(noisy ? "NOISY" : "QUIET", now); }
+    }
 
 #if USE_RGB_LED
     updateLed(state, now);
@@ -490,20 +543,39 @@ void loop()
         snprintf(status_str, sizeof(status_str), "P:%d B:%d M:%d L:%d - %s", hasPerson, hasBook, hasPhone, hasLaptop, stateName(state));
     }
     OSD.drawText(CHANNEL, 20, 20, status_str, OSD_COLOR_CYAN);
+    const IPAddress liveIp = WiFi.localIP();
+    char webUrl[64];
+    snprintf(webUrl, sizeof(webUrl), "WEB: http://%u.%u.%u.%u/", liveIp[0], liveIp[1], liveIp[2], liveIp[3]);
+    OSD.drawText(CHANNEL, 20, 60, webUrl, OSD_COLOR_CYAN);
     OSD.update(CHANNEL);
 
     // 每秒送給網頁一次
     if (logDue) {
-        printf("CSV,%lu", now / 1000);
-        for (int i = 0; i < 13; ++i) printf(",%d", stats[i]);
+        String csvLine;
+        csvLine.reserve(700);
+        csvLine = "CSV,"; csvLine += now / 1000;
+        for (int i = 0; i < 13; ++i) { csvLine += ','; csvLine += stats[i]; }
+        char tail[180], stateLine[200], petLine[250];
         // 舊欄位留空值，舊網頁也能接
-        printf(",%ld,%ld,%d,%d,%d,%lu,%d,%d,%d", objectAge, -1L,
+        snprintf(tail, sizeof(tail), ",%ld,%ld,%d,%d,%d,%lu,%d,%d,%d", objectAge, -1L,
                bookStable, phoneStable, laptopStable, intervalMs, BOOK_MIN_SCORE, PHONE_MIN_SCORE, LAPTOP_MIN_SCORE);
-        for (int i = 0; i < 10; ++i) printf(",%d", contextStats[i]);
-        printf(",%d,%d\r\n", phoneNearStable, computerStable);
-        printf("STATE,%lu,%s,%lu,%lu,%lu,%c,%d,%lu,%c,%lu,%d,%d,%d\r\n",
+        csvLine += tail;
+        for (int i = 0; i < 10; ++i) { csvLine += ','; csvLine += contextStats[i]; }
+        csvLine += ','; csvLine += (int)phoneNearStable;
+        csvLine += ','; csvLine += (int)computerStable;
+        // 麥克風沒啟動就送 -1，網頁會顯示無資料
+        snprintf(stateLine, sizeof(stateLine), "STATE,%lu,%s,%lu,%lu,%lu,%c,%d,%lu,%c,%lu,%d,%d,%d,%d,%d,%d",
                now / 1000, stateName(state), deskMs / 1000, studyMs / 1000, computerMs / 1000, 'A', awayCount, lastAwayMs / 1000,
-                '-', 0UL, 0, phoneStable, phoneNearStable);
+                '-', 0UL, 0, phoneStable, phoneNearStable,
+                soundReady ? (int)petSound.level : -1, soundReady ? (int)petSound.peak : -1, soundReady && lastNoisy);
+        snprintf(petLine, sizeof(petLine), "PET,%lu,%s,%u,%lu,%lu,%u,%u,%u,%u,%d,%lu,%lu,%lu,%d,%d",
+               now, petLife.phase(), petLife.energy, (unsigned long)(petLife.workMs / 1000),
+               (unsigned long)(petLife.restMs / 1000), petLife.cycles, petLife.rests,
+               petLife.generation, petLife.reminders, petLife.paused,
+               (unsigned long)(petLife.remindMs / 1000), (unsigned long)(petLife.restGoalMs / 1000),
+               (unsigned long)(petLife.decayMs / 1000), PET_DEMO, petLife.started);
+        petNetwork.publish(csvLine.c_str(), stateLine, petLine);
+        Serial.println(csvLine); Serial.println(stateLine); Serial.println(petLine);
     }
 
     delay(100);

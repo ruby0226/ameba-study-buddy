@@ -29,6 +29,11 @@
   .pet.computer { animation: type 1.2s steps(2) infinite; }
   @keyframes type { 50% { transform: translateX(4px); } }
   .pet.away { opacity: .75; transform: translateY(6px); }
+  .pet.tired { animation: bob 5s steps(3) infinite; opacity: .8; }
+  .pet.weak { transform: rotate(12deg); opacity: .6; }
+  .pet.dead { filter: grayscale(1); transform: rotate(90deg); opacity: .5; }
+  .pet.welcome { animation: bob .5s steps(4) 3; }
+  .pet.paused { animation: none; }
   @keyframes bob { 50% { transform: translateY(-8px); } }
   .ground { width: 140px; height: 6px; margin: 0 auto; border-radius: 3px; background: rgba(60, 45, 20, .1); }
   .badge { font-size: 26px; height: 32px; }
@@ -59,16 +64,18 @@
   .chip.on { background: #dff2ea; color: #1f5c4a; font-weight: 700; }
   .chip.weak { background: #fdf0d2; color: #7a5410; }
   .hint { font-size: 14px; margin: 10px 0 0; padding: 8px 12px; border-radius: 10px; background: var(--soft); }
-  select { font: inherit; padding: 7px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--text); }
+  select, input { font: inherit; padding: 7px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--text); max-width: 100%; }
   .setup { font-size: 14px; line-height: 1.8; padding-left: 22px; }
   #phoneNotice { color: #7a5410; min-height: 22px; font-size: 14px; margin-top: 8px; }
+  #micNotice { color: var(--muted); min-height: 20px; font-size: 13px; }
+  #micNotice.noisy { color: #8a3b12; font-weight: 700; }
   @media (max-width: 480px) { .stats { grid-template-columns: 1fr; } .pet { width: 104px; height: 104px; } }
 </style>
 </head>
 <body>
 <main>
   <h1>讀書小夥伴：寵物測試頁</h1>
-  <p class="sub">讀取開發板序列埠的 STATE 輸出，以小寵物呈現狀態。不跳通知、不發出聲音。</p>
+  <p class="sub">自動陪你讀書與休息。到時以小雞叫聲提醒；拍兩下手，小雞會叫一聲回應。</p>
 
   <section class="card pet-card" id="petCard">
     <div class="badge" id="badge"></div>
@@ -78,6 +85,7 @@
     <div class="state" id="stateText">等待資料</div>
     <div class="msg" id="msg">連接開發板後，自動判斷桌前活動。</div>
     <div id="phoneNotice"></div>
+    <div id="micNotice"></div>
     <div class="stats">
       <div class="stat"><b id="deskTime">0:00</b><span>累計在桌前</span></div>
       <div class="stat"><b id="modeTime">0:00／0:00</b><span>其中 讀書／電腦</span></div>
@@ -87,16 +95,32 @@
     <div class="bar"><div id="growBar"></div></div>
     <div class="stage" id="growText"></div>
     <div class="stage" id="lastUpdate"></div>
+    <p class="hint" id="petLifeText">等待第二週韌體資料</p>
+    <div class="stats">
+      <div class="stat"><b id="petEnergy">—</b><span>小雞活力</span></div>
+      <div class="stat"><b id="petWork">—</b><span>本輪在桌前／提醒門檻</span></div>
+      <div class="stat"><b id="petRest">—</b><span>有效離席／休息門檻</span></div>
+      <div class="stat"><b id="petCycles">—</b><span>本代學習＋休息輪數</span></div>
+    </div>
+    <p class="note" id="petSettings">遊戲活力不是健康評分。看不到人只代表離席推測。</p>
   </section>
 
   <section class="card">
-    <h2>連接開發板</h2>
+    <h2>Wi-Fi 連接開發板</h2>
+    <div class="row" style="margin-bottom:10px">
+      <label for="boardAddress">Ameba IP</label>
+      <input id="boardAddress" placeholder="例如 192.168.1.100" inputmode="url" aria-label="Ameba IP 位址">
+      <button id="btnOpenBoard">開啟板子網頁</button>
+    </div>
     <div class="row">
-      <button class="primary" id="btnConnect">選擇序列埠並連線</button>
+      <button class="primary" id="btnConnect">開始 Wi-Fi 連線</button>
       <button id="btnDisconnect">中斷</button>
+      <button id="btnSound">叫聲：開啟</button>
       <span id="conn">未連線</span>
     </div>
-    <p class="note">需用 Chrome 或 Edge。連線前請先<b>關閉 Arduino IDE 的序列埠監控視窗</b>，同一個 COM 埠一次只能被一個程式開啟。</p>
+    <p class="note">電腦／手機與 Ameba 連到同一個 Wi-Fi，開啟 http://板子IP/ 後按「開始 Wi-Fi 連線」。板子仍需供電，不需要 USB 資料線。IP 可從路由器裝置清單、VLC 畫面或首次燒錄後的除錯輸出查看。</p>
+    <p class="note" id="soundInfo">連線時啟用音效，聲音由電腦播放。保持網頁開啟；斷線時暫停養成。</p>
+    <p class="note">板上麥克風只量音量，不錄音也不辨識說話內容。連拍兩下手會觸發小雞回應；周圍持續吵雜時顯示提示，不影響計時。</p>
   </section>
 
   <section class="card">
@@ -142,7 +166,14 @@
   </section>
 
   <section class="card">
-    <h2>序列埠原始輸出</h2>
+    <h2>小雞事件紀錄</h2>
+    <button id="btnEvents">匯出事件 CSV</button>
+    <pre id="petEvents" aria-live="polite"></pre>
+    <p class="note">保留本頁最近 300 筆事件；重新整理會清空。板子重開機也會重設養成進度。</p>
+  </section>
+
+  <section class="card">
+    <h2>網路原始資料</h2>
     <pre id="log"></pre>
   </section>
 </main>
@@ -207,7 +238,7 @@ const STATES = {
 
 const $ = id => document.getElementById(id);
 const blank = () => ({ state: null, deskS: 0, studyS: 0, computerS: 0, awayCount: 0, lastAwayS: 0,
-                       phone: false, phoneNear: false });
+                       phone: false, phoneNear: false, mic: -1, micPeak: -1, noisy: false });
 let current = blank();
 
 function fmt(sec) {
@@ -239,6 +270,10 @@ function render() {
   $("phoneNotice").textContent = !current.phone ? '' : current.phoneNear
     ? '📱 手機持續出現在人附近；位置關聯不代表正在使用，不影響讀書計時。'
     : '📱 看到手機；尚未判定是否使用，不影響讀書計時。';
+  $("micNotice").textContent = current.mic < 0 ? '麥克風：無資料' : current.noisy
+    ? `🔊 周圍有點吵（音量 ${current.mic}），小雞摀住耳朵；不影響計時。`
+    : `🎙 麥克風：安靜（音量 ${current.mic}，最高 ${current.micPeak}）· 拍兩下手跟小雞打招呼`;
+  $("micNotice").className = current.noisy ? 'noisy' : '';
 
   if (next) {
     const pct = (current.deskS - stage.min) / (next.min - stage.min) * 100;
@@ -249,8 +284,140 @@ function render() {
     $("growText").textContent = "已成長到最終階段";
   }
   $("lastUpdate").textContent = "最後更新 " + new Date().toLocaleTimeString();
+  renderLife();
 }
 
+let life = null, lifeAt = 0, welcomeUntil = 0, soundEnabled = true, audioContext = null;
+let eventSegment = 0, lastEventMs = -1;
+let networkEnabled = false, networkTask = null, networkAbort = null, networkEpoch = 0;
+let lastSequence = -1, lastBoardMs = -1, eventCursor = -1, suppressSound = true;
+let replayingEvents = false, clapQuietUntil = 0;
+const petEvents = [], eventKeys = new Set();
+const PET_PHASES = ['HEALTHY', 'TIRED', 'WEAK', 'DEAD'];
+const EVENT_NAMES = { WELCOME: '回座歡迎', LEAVE: '離席睡覺', REMIND: '休息提醒',
+  WEAK: '活力不足', DIED: '小雞死亡', RESTED: '完成休息', REBORN: '重新孵蛋',
+  CLAP: '拍手互動', NOISY: '環境變吵', QUIET: '恢復安靜' };
+
+// 先經過點擊，瀏覽器才允許出聲
+async function enableAudio() {
+  if (!soundEnabled) return;
+  try {
+    const Audio = globalThis.AudioContext || globalThis.webkitAudioContext;
+    if (!Audio) { $('soundInfo').textContent = '目前無法播放叫聲，仍會顯示休息提醒。'; return; }
+    if (!audioContext) audioContext = new Audio();
+    await audioContext.resume();
+    $('soundInfo').textContent = '到休息時間提醒一次，繼續久坐到虛弱再提醒一次；拍手只跳躍，不出聲。';
+  } catch (e) { $('soundInfo').textContent = '音效未啟用，可按叫聲按鈕重試；文字提醒仍有效。'; }
+}
+
+// 只在兩個休息提醒階段出聲
+function chirp(kind = 'remind') {
+  if (!soundEnabled || !audioContext || audioContext.state !== 'running') return;
+  const count = kind === 'weak' ? 2 : 3;
+  try {
+    // 播完先等一下，避免麥克風聽到自己就跳
+    clapQuietUntil = Date.now() + 5000;
+    for (let i = 0; i < count; i++) {
+      const start = audioContext.currentTime + i * .22;
+      const osc = audioContext.createOscillator(), gain = audioContext.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(2200, start);
+      osc.frequency.exponentialRampToValueAtTime(3600, start + .06);
+      osc.frequency.exponentialRampToValueAtTime(1900, start + .14);
+      gain.gain.setValueAtTime(.001, start);
+      gain.gain.exponentialRampToValueAtTime(.10, start + .02);
+      gain.gain.exponentialRampToValueAtTime(.001, start + .15);
+      osc.connect(gain); gain.connect(audioContext.destination);
+      osc.onended = () => { osc.disconnect(); gain.disconnect(); };
+      osc.start(start); osc.stop(start + .16);
+    }
+  } catch (e) { $('soundInfo').textContent = '叫聲播放失敗，請查看文字提醒。'; }
+}
+$('btnSound').onclick = async () => {
+  soundEnabled = !soundEnabled;
+  $('btnSound').textContent = soundEnabled ? '叫聲：開啟' : '叫聲：靜音';
+  if (soundEnabled) await enableAudio();
+};
+
+function renderLife() {
+  if (!life) return;
+  const stale = Date.now() - lifeAt > 3000;
+  const paused = life.paused || stale;
+  const dead = life.phase === 'DEAD', sleeping = current.state === 'AWAY';
+  const name = dead || !life.started ? 'egg' : life.cycles >= 3 ? 'adult' : 'baby';
+  $('pet').innerHTML = pixelSvg(name, sleeping && !dead);
+  const activity = current.state === 'STUDYING' ? 'studying' : current.state === 'COMPUTER' ? 'computer' : '';
+  $('pet').className = 'pet ' + (paused ? 'paused' : dead ? 'dead' : sleeping ? 'away' :
+    life.phase === 'WEAK' ? 'weak' : life.phase === 'TIRED' ? 'tired' :
+    Date.now() < welcomeUntil ? 'welcome' : activity);
+  $('stage').textContent = `第 ${life.generation} 代 · ${dead ? '死亡，等待休息後重生' : name === 'egg' ? '蛋' : name === 'baby' ? '幼年' : '成年'}`;
+  $('badge').textContent = paused ? '⏸' : dead ? '💀' : sleeping ? '💤' :
+    life.phase !== 'HEALTHY' ? '🥱' : Date.now() < welcomeUntil ? '🐣' : current.noisy ? '🙉' :
+    current.state === 'STUDYING' ? '📖' : current.state === 'COMPUTER' ? '💻' : '';
+  $('petLifeText').textContent = paused ? '養成暫停：等待穩定辨識與連線，不扣活力也不計休息。' :
+    dead ? '小雞已死亡。完成有效離席休息後會變回蛋，回座後重新孵化。' :
+    sleeping ? (life.rest >= life.restGoal ? '休息完成，回座後再一起開始。' : '小雞陪你休息；連續離席達門檻才算完成。') :
+    life.phase === 'WEAK' ? '小雞很虛弱了，離開桌前休息一下吧。' :
+    life.phase === 'TIRED' ? '這輪已到休息時間，小雞也累了。' : '小雞正在陪伴你；完成學習與休息才能成長。';
+  $('petEnergy').textContent = life.energy + ' / 100';
+  $('petWork').textContent = fmt(life.work) + ' / ' + fmt(life.remindGoal);
+  $('petRest').textContent = fmt(life.rest) + ' / ' + fmt(life.restGoal);
+  $('petCycles').textContent = life.cycles + ' 輪';
+  $('growBar').style.width = Math.min(100, life.cycles / 3 * 100) + '%';
+  $('growText').textContent = dead ? '完成休息後重新養成，桌前總紀錄保留。' :
+    life.cycles >= 3 ? '已成年，仍需要定時休息。' : `再完成 ${3 - life.cycles} 輪學習＋休息成為成年小雞`;
+  $('petSettings').textContent = `${life.demo ? '展示設定' : '一般設定'}：${fmt(life.remindGoal)} 提醒、休息 ${fmt(life.restGoal)}；超時在座 ${fmt(life.decay)} 活力耗盡。這是遊戲設定，不是健康診斷。`;
+}
+
+function handleLife(f) {
+  if (f.length !== 16 || !PET_PHASES.includes(f[2])) return;
+  const values = f.slice(1).filter((_, i) => i !== 1).map(Number);
+  if (values.some(n => !Number.isSafeInteger(n) || n < 0)) return;
+  const n = i => Number(f[i]);
+  if (n(3) > 100 || !n(11) || !n(12) || !n(13) || !n(8) || n(10) > 1 || n(14) > 1 || n(15) > 1) return;
+  const next = { uptime: n(1), phase: f[2], energy: n(3), work: n(4), rest: n(5),
+    cycles: n(6), rests: n(7), generation: n(8), reminders: n(9), paused: !!n(10),
+    remindGoal: n(11), restGoal: n(12), decay: n(13), demo: !!n(14), started: !!n(15) };
+  // 重連只同步狀態，不補播舊提醒
+  if (life && next.uptime >= life.uptime && next.generation === life.generation &&
+      !next.paused && networkEnabled && !suppressSound && ['PRESENT', 'STUDYING', 'COMPUTER'].includes(current.state)) {
+    if (next.phase === 'WEAK' && life.phase !== 'WEAK') chirp('weak');
+    else if (next.phase === 'TIRED' && next.reminders > life.reminders) chirp('remind');
+  }
+  life = next; lifeAt = Date.now();
+  suppressSound = false;
+  renderLife();
+}
+
+function handlePetEvent(f) {
+  if (f.length !== 4 || !EVENT_NAMES[f[3]]) return;
+  const ms = Number(f[1]), id = Number(f[2]);
+  if (!Number.isSafeInteger(ms) || ms < 0 || !Number.isSafeInteger(id) || id < 1) return;
+  if (ms < lastEventMs) { eventSegment++; eventKeys.clear(); }
+  lastEventMs = ms;
+  const key = `${eventSegment}:${id}`;
+  if (eventKeys.has(key)) return;
+  eventKeys.add(key);
+  petEvents.push({ key, at: Date.now(), ms, id, code: f[3] });
+  while (petEvents.length > 300) eventKeys.delete(petEvents.shift().key);
+  if (f[3] === 'WELCOME' || f[3] === 'REBORN') welcomeUntil = Date.now() + 2000;
+  if (f[3] === 'CLAP' && networkEnabled && !suppressSound && !replayingEvents &&
+      lastBoardMs >= ms && lastBoardMs - ms <= 2000 && Date.now() >= clapQuietUntil &&
+      life && life.started && !life.paused && life.phase !== 'DEAD' && Date.now() - lifeAt <= 3000 &&
+      ['PRESENT', 'STUDYING', 'COMPUTER'].includes(current.state)) {
+    welcomeUntil = Date.now() + 2000;
+    clapQuietUntil = Date.now() + 5000;
+    if (life) renderLife();
+  }
+  $('petEvents').textContent = petEvents.slice(-30).map(e => `${new Date(e.at).toLocaleTimeString()}　${EVENT_NAMES[e.code]}`).join('\n');
+  $('petEvents').scrollTop = $('petEvents').scrollHeight;
+}
+$('btnEvents').onclick = () => {
+  const csv = 'received_ms,board_ms,event_id,event\r\n' + petEvents.map(e => `${e.at},${e.ms},${e.id},${e.code}`).join('\r\n');
+  const url = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }));
+  const a = document.createElement('a'); a.href = url; a.download = 'chick-events.csv'; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
 
 let lastCsv = null, lastCsvAt = 0, lastStateAt = 0;
 const csvHistory = [];
@@ -322,8 +489,10 @@ $("btnExport").onclick = () => {
 
 // 太久沒資料就別當成即時結果
 setInterval(() => {
+  pollNetwork();
+  if (life) renderLife();
   if (lastCsvAt && Date.now() - lastCsvAt > 3000) {
-    $("placeHint").textContent = '超過 3 秒未收到新的 CSV，以上分數是舊資料，請確認序列埠連線。';
+    $("placeHint").textContent = '超過 3 秒未收到新的 CSV，以上分數是舊資料，請確認 Wi-Fi 連線。';
     $("inferenceInfo").textContent = '資料已停止更新';
     $("relationInfo").textContent = '關聯資料已逾時';
     ['chipPerson', 'chipBook', 'chipPhone', 'chipLaptop', 'chipTable', 'chipKeyboard', 'chipMouse', 'chipRemote'].forEach(id => { $(id).className = 'chip'; });
@@ -331,7 +500,7 @@ setInterval(() => {
   if (lastStateAt && Date.now() - lastStateAt > 3000) {
     $("stateText").textContent = '狀態資料已逾時';
     $("msg").textContent = '等待新的開發板狀態，累計時間保留最後一次回報。';
-    $("phoneNotice").textContent = ''; $("badge").textContent = '❓'; $("pet").className = 'pet';
+    $("phoneNotice").textContent = ''; $("micNotice").textContent = ''; $("badge").textContent = '❓'; $("pet").className = 'pet';
   }
 }, 1000);
 
@@ -350,6 +519,8 @@ function handleLine(line) {
   log(line);
   const f = line.split(",");
   if (f[1] === "t_s") return;
+  if (f[0] === 'PET') { handleLife(f); return; }
+  if (f[0] === 'EVENT') { handlePetEvent(f); return; }
   if (f[0] === "CSV" && f.length >= 11) { renderPlacement(f); return; }
   if (f[0] !== "STATE" || f.length < 9) return;
   if (!STATES[f[2]]) return;
@@ -362,81 +533,113 @@ function handleLine(line) {
     $("modeText").textContent = '舊韌體回報非自動狀態，請燒錄新版；本頁不採用這筆活動判斷。';
     return;
   }
+  const hasMic = f.length >= 17 && Number(f[14]) >= 0;
   current = { state: f[2], deskS: n(3), studyS: n(4), computerS: n(5),
-              awayCount: n(7), lastAwayS: n(8), phone: f[12] === "1", phoneNear: f[13] === "1" };
+              awayCount: n(7), lastAwayS: n(8), phone: f[12] === "1", phoneNear: f[13] === "1",
+              mic: hasMic ? n(14) : -1, micPeak: hasMic ? n(15) : -1, noisy: hasMic && f[16] === "1" };
   $("modeText").textContent = f.length >= 14 ? '自動判斷：物件＋位置關聯' : '舊韌體自動判斷：尚無位置關聯，請燒錄新版';
   render();
 }
 
-let port = null, reader = null, readTask = null, connecting = false;
-
-// 先選板子的序列埠
-async function connect() {
-  if (port || connecting) return;
-  if (!("serial" in navigator)) {
-    $("conn").textContent = "這個瀏覽器不支援 Web Serial，請用 Chrome 或 Edge 開啟。";
-    return;
-  }
-  connecting = true;
-  $("btnConnect").disabled = true;
+// 本機 HTML 只帶你到板子頁面，資料保持同來源
+function openBoard() {
   try {
-    const selected = await navigator.serial.requestPort();
-    await selected.open({ baudRate: 115200 });
-    port = selected;
-  } catch (e) {
-    $("conn").textContent = "連線失敗：" + e.message;
-    $("btnConnect").disabled = false;
-    return;
-  } finally {
-    connecting = false;
-  }
-  csvHistory.length = 0; lastCsv = null; lastCsvAt = lastStateAt = 0;
-  ['chipPerson', 'chipBook', 'chipPhone', 'chipLaptop', 'chipTable', 'chipKeyboard', 'chipMouse', 'chipRemote'].forEach(id => { $(id).textContent = '等待新資料'; $(id).className = 'chip'; });
-  $("placeHint").textContent = '等待新的擺放檢查資料';
-  $("inferenceInfo").textContent = '等待推論資料';
-  $("recentInfo").textContent = '最近 30 秒：等待資料';
-  $("relationInfo").textContent = '等待關聯判斷資料';
-  $("modeText").textContent = '等待自動辨識資料';
-  $("stateText").textContent = '等待新的開發板狀態';
-  $("phoneNotice").textContent = '';
-  $("conn").textContent = "已連線，等待 STATE 資料…（要燒錄程式前，請先按「中斷」或關閉此分頁）";
-  readTask = readSerial(port);
+    const raw = $('boardAddress').value.trim();
+    if (!raw) throw new Error('請先填入 Ameba 的 IP');
+    const url = new URL(raw.includes('://') ? raw : 'http://' + raw);
+    if (url.protocol !== 'http:' || url.username || url.password || url.search || url.hash || url.pathname !== '/')
+      throw new Error('請填 http://板子IP/，不要加入其他路徑');
+    location.assign(url.origin + '/');
+  } catch (e) { $('conn').textContent = '網址無法開啟：' + e.message; }
+}
+$('btnOpenBoard').onclick = openBoard;
+if (location.protocol === 'http:') $('boardAddress').value = location.host;
+
+// 每秒取一次快照，這個請求同時是心跳
+async function pollNetwork() {
+  if (!networkEnabled || networkTask) return;
+  const epoch = networkEpoch;
+  const controller = new AbortController();
+  networkAbort = controller;
+  const timeout = setTimeout(() => controller.abort(), 2000);
+  const task = (async () => {
+    try {
+      const response = await fetch('/api/poll?after=' + eventCursor, {
+        method: 'POST', headers: { 'X-StudyBuddy': '1' }, cache: 'no-store', signal: controller.signal
+      });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const body = await response.text();
+      if (!networkEnabled || epoch !== networkEpoch) return;
+      const lines = body.trim().split(/\r?\n/), meta = lines.shift().split(',');
+      const [seq, cursor, ms] = meta.slice(1).map(Number);
+      if (meta[0] !== 'NET' || meta.length !== 4 || [seq, cursor, ms].some(n => !Number.isSafeInteger(n) || n < 0))
+        throw new Error('不是新版 Ameba 的資料');
+      const reboot = lastBoardMs >= 0 && (ms < lastBoardMs || seq < lastSequence);
+      if (reboot) {
+        life = null; suppressSound = true; lastSequence = -1;
+        csvHistory.length = 0; eventSegment++; eventKeys.clear(); lastEventMs = -1;
+      }
+      const fresh = seq !== lastSequence;
+      if (seq > 0 && fresh && !['CSV,', 'STATE,', 'PET,'].every(prefix => lines.some(line => line.startsWith(prefix))))
+        throw new Error('資料尚未完整');
+      replayingEvents = suppressSound;
+      lastBoardMs = ms;
+      for (const line of lines) {
+        if (line.startsWith('EVENT,')) handleLine(line);
+        else if (line === 'NOTICE,EVENT_GAP') log('部分舊事件已超出板端暫存，這次只補最近事件。');
+        else if (seq > 0 && fresh) handleLine(line);
+      }
+      lastSequence = seq; lastBoardMs = ms; eventCursor = cursor;
+      replayingEvents = false;
+      $('conn').textContent = seq ? 'Wi-Fi 已連線 · ' + location.host : 'Wi-Fi 已連線，等待板端辨識啟動';
+    } catch (e) {
+      if (networkEnabled && epoch === networkEpoch) {
+        suppressSound = true;
+        $('conn').textContent = 'Wi-Fi 連線中斷，正在重試；請確認電源、網路與 IP。';
+        if (life) { life.paused = true; renderLife(); }
+      }
+    } finally {
+      clearTimeout(timeout);
+      if (networkAbort === controller) networkAbort = null;
+    }
+  })();
+  networkTask = task;
+  try { await task; } finally { if (networkTask === task) networkTask = null; }
 }
 
-// 持續收資料，結束後放開序列埠
-async function readSerial(connectedPort) {
-  const decoder = new TextDecoderStream();
-  const pipeClosed = connectedPort.readable.pipeTo(decoder.writable).catch(() => {});
-  reader = decoder.readable.getReader();
-  let buf = "";
-  try {
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      buf += value;
-      const lines = buf.split(/\r?\n/);
-      buf = lines.pop();
-      lines.forEach(handleLine);
-    }
-  } catch (e) {
-    $("conn").textContent = "讀取中斷：" + e.message;
-  } finally {
-    reader.releaseLock();
-    reader = null;
-    await pipeClosed;
-    try { await connectedPort.close(); }
-    catch (e) { $("conn").textContent = '關閉序列埠失敗：' + e.message; }
-    port = null;
-    $("btnConnect").disabled = false;
-    if ($("conn").textContent.startsWith('已連線')) $("conn").textContent = '連線已結束';
+async function connect() {
+  if (networkEnabled || networkTask) return;
+  if (location.protocol !== 'http:') {
+    $('conn').textContent = '請填入 IP 並按「開啟板子網頁」，再開始連線。';
+    return;
   }
+  enableAudio();
+  networkEnabled = true; networkEpoch++;
+  lastSequence = lastBoardMs = eventCursor = -1; suppressSound = true;
+  $('btnConnect').disabled = true;
+  csvHistory.length = 0; lastCsv = null; lastCsvAt = lastStateAt = 0;
+  life = null; lifeAt = 0; welcomeUntil = 0; eventSegment++; lastEventMs = -1; eventKeys.clear();
+  $('petLifeText').textContent = '等待 Ameba 的 Wi-Fi 養成資料';
+  ['petEnergy', 'petWork', 'petRest', 'petCycles'].forEach(id => { $(id).textContent = '—'; });
+  ['chipPerson', 'chipBook', 'chipPhone', 'chipLaptop', 'chipTable', 'chipKeyboard', 'chipMouse', 'chipRemote'].forEach(id => { $(id).textContent = '等待新資料'; $(id).className = 'chip'; });
+  $('placeHint').textContent = '等待新的擺放檢查資料';
+  $('inferenceInfo').textContent = '等待推論資料';
+  $('recentInfo').textContent = '最近 30 秒：等待資料';
+  $('relationInfo').textContent = '等待關聯判斷資料';
+  $('modeText').textContent = '等待自動辨識資料';
+  $('stateText').textContent = '等待新的開發板狀態';
+  $('phoneNotice').textContent = ''; $('micNotice').textContent = '';
+  $('conn').textContent = '正在連接 Ameba…';
+  await pollNetwork();
 }
 
 async function disconnect() {
-  try { if (reader) await reader.cancel(); } catch (e) {}
-  if (readTask) await readTask;
-  readTask = null;
-  $("conn").textContent = "未連線";
+  networkEnabled = false; networkEpoch++;
+  if (networkAbort) networkAbort.abort();
+  if (networkTask) await networkTask;
+  if (life) { life.paused = true; renderLife(); }
+  $('btnConnect').disabled = false;
+  $('conn').textContent = 'Wi-Fi 已中斷，養成將在心跳逾時後暫停';
 }
 
 $("btnConnect").onclick = connect;

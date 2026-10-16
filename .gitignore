@@ -1,0 +1,9 @@
+.build/
+Day3_StudyBuddy_Verify/WiFiSecrets.h
+*.log
+~$*
+影片/
+proposal/第一週_*
+proposal/第二週_進度說明.docx
+scripts/report-week2.local.json
+scripts/build-week2-word.ps1
