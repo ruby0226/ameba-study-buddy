@@ -44,8 +44,8 @@ unsigned long petEventId = 0;
 PetSound petSound;
 bool soundReady = false, lastNoisy = false;
 
-// 模型先多給低分框，已鎖定的物品才用得到；新物品仍照各類門檻
-#define NN_CONF_THRESH   0.20f
+// 分數不夠就先不算
+#define NN_CONF_THRESH   0.25f
 // 坐穩 3 秒才開始，離開 10 秒才算離席
 #define HOLD_MS          3000
 #define AWAY_MS          10000
@@ -94,7 +94,7 @@ std::vector<ObjectDetectionResult> latestObjects;
 unsigned long objectFrameMs = 0;
 bool objectReceived = false;
 bool latestPerson = false, latestBook = false, latestPhone = false, latestLaptop = false;
-ObjectTracks objectTracks(BOOK_MIN_PERCENT, PHONE_MIN_PERCENT, LAPTOP_MIN_PERCENT);
+ObjectTracks objectTracks;
 DetectionEvidence phoneNearEvidence, computerEvidence;
 bool bookStable = false, phoneStable = false, laptopStable = false;
 bool phoneNearStable = false, computerStable = false;
@@ -170,7 +170,9 @@ bool heldFor(const Hold &h, unsigned long now, unsigned long ms)
 
 Item sceneItem(ObjectDetectionResult item)
 {
-    return {item.type(), item.score(), item.xMin(), item.yMin(), item.xMax(), item.yMax()};
+    // 靠近鏡頭時框會超出畫面一點，裁回來才不會整個被丟掉
+    auto clip = [](float v) { return v < 0 ? 0.0f : v > 1 ? 1.0f : v; };
+    return {item.type(), item.score(), clip(item.xMin()), clip(item.yMin()), clip(item.xMax()), clip(item.yMax())};
 }
 
 std::vector<Item> sceneItems(const std::vector<ObjectDetectionResult> &results)
