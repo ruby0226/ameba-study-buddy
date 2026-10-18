@@ -44,8 +44,8 @@ unsigned long petEventId = 0;
 PetSound petSound;
 bool soundReady = false, lastNoisy = false;
 
-// 分數不夠就先不算
-#define NN_CONF_THRESH   0.25f
+// 模型先多給低分框，已鎖定的物品才用得到；新物品仍照各類門檻
+#define NN_CONF_THRESH   0.20f
 // 坐穩 3 秒才開始，離開 10 秒才算離席
 #define HOLD_MS          3000
 #define AWAY_MS          10000
@@ -387,7 +387,7 @@ void setup()
     // CSV 給校正看，STATE 給寵物看
     Serial.println("CSV,t_s,samples,person_hits,person_max,book_hits,book_max,phone_hits,phone_max,laptop_hits,laptop_max,face_hits,face_max,face_pitch,face_samples,object_age_ms,face_age_ms,book_stable,phone_stable,laptop_stable,interval_ms,book_threshold,phone_threshold,laptop_threshold,table_hits,table_max,keyboard_hits,keyboard_max,mouse_hits,mouse_max,remote_hits,remote_max,book_assist_hits,phone_assist_hits,phone_near_person,computer_context");
 
-    Serial.println("STATE,t_s,state,desk_s,study_s,computer_s,mode,away_count,last_away_s,head,headdown_s,remind,phone_present,phone_near_person,mic_level,mic_peak,noisy");
+    Serial.println("STATE,t_s,state,desk_s,study_s,computer_s,mode,away_count,last_away_s,head,headdown_s,remind,phone_present,phone_near_person,mic_level,mic_peak,noisy,tracks");
     windowStart = millis();
     lastLoopMs = millis();
 }
@@ -414,12 +414,7 @@ void loop()
     computerStable = objectFresh && computerEvidence.active &&
         objectTracks.present(CLASS_KEYBOARD) && objectTracks.present(CLASS_MOUSE);
     ObjectTracks::View tracked[ObjectTracks::CAPACITY]{};
-    for (unsigned i=0; i<ObjectTracks::CAPACITY; ++i) {
-        const auto &t = objectTracks.tracks[i];
-        tracked[i].box=t.box;
-        tracked[i].id=t.evidence.active ? t.id : 0;
-        tracked[i].held=now-t.seen > 500;
-    }
+    for (unsigned i=0; i<ObjectTracks::CAPACITY; ++i) tracked[i] = objectTracks.view(i, now);
 
     // 先複製統計，解鎖後再輸出
     bool logDue = now - windowStart >= LOG_INTERVAL_MS;
@@ -481,17 +476,27 @@ void loop()
         OSD.drawText(CHANNEL, xmin, std::max(0, ymin - (int)OSD.getTextHeight(CHANNEL)), text_str, OSD_COLOR_CYAN);
     }
 
-    // 漏掉時畫最後位置，黃框表示暫時保留，不是假裝又看見。
+    // 鎖定的物品標 ID 和追了多久；漏掉時畫最後位置，黃框表示等它回來，不是假裝又看見。
+    String trackSummary;
     for (const auto &t : tracked) {
         if (!objectFresh || !t.id) continue;
         const Item box = t.box;
+        const bool held = t.missingMs > 500;
         const int left=(int)(box.left*im_w), top=(int)(box.top*im_h);
         const int right=(int)(box.right*im_w), bottom=(int)(box.bottom*im_h);
-        if (t.held) OSD.drawRect(CHANNEL,left,top,right,bottom,2,OSD_COLOR_YELLOW);
+        if (held) OSD.drawRect(CHANNEL,left,top,right,bottom,2,OSD_COLOR_YELLOW);
         char label[48];
-        snprintf(label,sizeof(label),"%s #%lu%s",className(box.type),(unsigned long)t.id,t.held?" hold":" track");
+        snprintf(label,sizeof(label),"%s #%lu %lus%s",className(box.type),(unsigned long)t.id,
+                 (unsigned long)(t.trackedMs/1000),held?" lost":" track");
         OSD.drawText(CHANNEL,left,std::min(bottom,(int)im_h-(int)OSD.getTextHeight(CHANNEL)),label,
-                     t.held?OSD_COLOR_YELLOW:OSD_COLOR_CYAN);
+                     held?OSD_COLOR_YELLOW:OSD_COLOR_CYAN);
+        // 給網頁：類別-ID-秒數-是否漏看，最多四件
+        if (trackSummary.length() < 80) {
+            char part[32];
+            snprintf(part,sizeof(part),"%s%s-%lu-%lu-%d",trackSummary.length()?"|":"",className(box.type),
+                     (unsigned long)t.id,(unsigned long)(t.trackedMs/1000),held);
+            trackSummary += part;
+        }
     }
 
     // 模型停住時先顯示無法確認
@@ -563,7 +568,7 @@ void loop()
         csvLine.reserve(700);
         csvLine = "CSV,"; csvLine += now / 1000;
         for (int i = 0; i < 13; ++i) { csvLine += ','; csvLine += stats[i]; }
-        char tail[180], stateLine[200], petLine[250];
+        char tail[180], stateLine[300], petLine[250];
         // 舊欄位留空值，舊網頁也能接
         snprintf(tail, sizeof(tail), ",%ld,%ld,%d,%d,%d,%lu,%d,%d,%d", objectAge, -1L,
                bookStable, phoneStable, laptopStable, intervalMs, BOOK_MIN_SCORE, PHONE_MIN_SCORE, LAPTOP_MIN_SCORE);
@@ -572,10 +577,11 @@ void loop()
         csvLine += ','; csvLine += (int)phoneNearStable;
         csvLine += ','; csvLine += (int)computerStable;
         // 麥克風沒啟動就送 -1，網頁會顯示無資料
-        snprintf(stateLine, sizeof(stateLine), "STATE,%lu,%s,%lu,%lu,%lu,%c,%d,%lu,%c,%lu,%d,%d,%d,%d,%d,%d",
+        snprintf(stateLine, sizeof(stateLine), "STATE,%lu,%s,%lu,%lu,%lu,%c,%d,%lu,%c,%lu,%d,%d,%d,%d,%d,%d,%s",
                now / 1000, stateName(state), deskMs / 1000, studyMs / 1000, computerMs / 1000, 'A', awayCount, lastAwayMs / 1000,
                 '-', 0UL, 0, phoneStable, phoneNearStable,
-                soundReady ? (int)petSound.level : -1, soundReady ? (int)petSound.peak : -1, soundReady && lastNoisy);
+                soundReady ? (int)petSound.level : -1, soundReady ? (int)petSound.peak : -1, soundReady && lastNoisy,
+                trackSummary.length() ? trackSummary.c_str() : "-");
         snprintf(petLine, sizeof(petLine), "PET,%lu,%s,%u,%lu,%lu,%u,%u,%u,%u,%d,%lu,%lu,%lu,%d,%d",
                now, petLife.phase(), petLife.energy, (unsigned long)(petLife.workMs / 1000),
                (unsigned long)(petLife.restMs / 1000), petLife.cycles, petLife.rests,

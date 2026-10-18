@@ -81,6 +81,54 @@ constexpr bool rolloverAndCapacity() {
     for(const auto &track:t.tracks) if(track.id)++count;
     return count==ObjectTracks::CAPACITY;
 }
+constexpr bool lockedFollowsUntilGone() {
+    ObjectTracks t;
+    Item b{CLASS_BOOK,60,.30f,.50f,.45f,.75f};
+    t.observe(&b,1,100); t.observe(&b,1,600); t.observe(&b,1,1200);
+    const uint32_t id=t.tracks[0].id;
+    // 拿起來：分數掉到 22、離開桌面區，仍是同一本
+    for (uint32_t n=1300; n<=2300; n+=100) {
+        b.score=22; b.top-=.03f; b.bottom-=.03f;
+        t.observe(&b,1,n);
+    }
+    if (!t.present(CLASS_BOOK) || t.tracks[0].id!=id || inDesk(b)) return false;
+    if (t.view(0,2300).trackedMs!=1100) return false;
+    // 同樣低分的新書不能直接成立
+    ObjectTracks fresh;
+    fresh.observe(&b,1,100); fresh.observe(&b,1,600); fresh.observe(&b,1,1200);
+    if (fresh.present(CLASS_BOOK)) return false;
+    // 停在桌角沒動，漏看 2.5 秒仍保留
+    Item still{CLASS_PHONE,60,.80f,.85f,.90f,.97f};
+    ObjectTracks s;
+    s.observe(&still,1,100); s.observe(&still,1,600); s.observe(&still,1,1200);
+    still.left+=.01f; still.right+=.01f; s.observe(&still,1,1300);
+    for (uint32_t n=1800; n<=3800; n+=500) s.observe(nullptr,0,n);
+    if (!s.present(CLASS_PHONE)) return false;
+    s.observe(nullptr,0,4301);
+    return !s.present(CLASS_PHONE);
+}
+constexpr bool movingOutOfFrameEndsEarly() {
+    ObjectTracks t;
+    Item p{CLASS_PHONE,60,.50f,.55f,.60f,.65f};
+    t.observe(&p,1,100); t.observe(&p,1,600); t.observe(&p,1,1200);
+    for (uint32_t n=1300; n<=1600; n+=100) {p.left+=.05f; p.right+=.05f; t.observe(&p,1,n);}
+    t.observe(nullptr,0,1800);
+    if (!t.present(CLASS_PHONE)) return false;
+    t.observe(nullptr,0,2300);
+    return !t.present(CLASS_PHONE);
+}
+constexpr bool lockedTrackKeepsItsBox() {
+    ObjectTracks t;
+    Item b{CLASS_BOOK,60,.30f,.50f,.45f,.75f};
+    t.observe(&b,1,100); t.observe(&b,1,600); t.observe(&b,1,1200);
+    const uint32_t id=t.tracks[0].id;
+    Item two[2]={{CLASS_BOOK,70,.60f,.50f,.75f,.75f},b};
+    t.observe(two,2,1300);
+    return t.tracks[0].id==id && t.tracks[0].box.left==b.left && t.tracks[1].id && !t.tracks[1].locked;
+}
+static_assert(lockedFollowsUntilGone(),"Locked object follows low score and off-desk movement; new low score cannot lock");
+static_assert(movingOutOfFrameEndsEarly(),"Object moving out of frame is dropped before the 3 second timeout");
+static_assert(lockedTrackKeepsItsBox(),"A second object never steals the locked object's box");
 static_assert(tracksMotionAndReacquires(),"Same object keeps ID; removed object expires and must reconfirm");
 static_assert(differentObjectsCannotPoolEvidence(),"Different object locations cannot share confirmation hits");
 static_assert(staleInferenceAndConflicts(),"Stale inference and conflicting classes never keep tracks alive");

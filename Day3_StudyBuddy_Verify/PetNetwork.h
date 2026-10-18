@@ -53,7 +53,7 @@ private:
     enum { EVENT_COUNT = 32 };
     WiFiServer server{80, TCP_MODE, NON_BLOCKING_MODE};
     SemaphoreHandle_t lock = NULL;
-    char csv[700] = {}, state[200] = {}, pet[250] = {};
+    char csv[700] = {}, state[300] = {}, pet[250] = {};
     char events[EVENT_COUNT][80] = {};
     unsigned long sequence = 0, eventId = 0, heartbeat = 0;
     bool seen = false;

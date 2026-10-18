@@ -23,6 +23,8 @@ async function main(){
  assert.equal(context.parseCare('CARE,1,1,1,,0,0,1,300,0,1'),null);
  assert.equal(context.parseState('STATE,0,MANUAL,0,0,0,A,0,0,-,0,0,0,0'),null);
  assert.equal(context.parseState('STATE,0,UNSURE,0,0,0,A,0,0,-,0,0,0,0').state,'UNSURE');
+ const tracked=context.parseState('STATE,0,STUDYING,0,0,0,A,0,0,-,0,0,0,0,10,20,0,book-3-12-0|phone-5-4-1|cat-1-1-0');assert.equal(tracked.tracks.length,2);assert.equal(tracked.tracks[0].name,'書本');assert.equal(tracked.tracks[1].lost,true);
+ assert.match(context.trackText(tracked.tracks),/書本 #3 · 00:12.*手機 #5 · 暫時看不到/);assert.equal(context.parseState('STATE,0,UNSURE,0,0,0,A,0,0,-,0,0,0,0,10,20,0,-').tracks.length,0);
  fetchImpl=async()=>({ok:true,text:async()=>snapshot()});
  await context.connect();assert.equal(run('fresh()'),true);assert.equal(element('foodCount').textContent,2);
  const received=run('lastSnapshotAt');now+=1000;send(snapshot());assert.equal(run('lastSnapshotAt'),received);
