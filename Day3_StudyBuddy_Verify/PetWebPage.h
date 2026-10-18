@@ -3,652 +3,202 @@
 static const char PET_WEB_PAGE[] = R"PETPAGE(<!doctype html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>讀書小夥伴 寵物測試</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f7f5ec"><title>啾啾的小屋 · 一起慢慢長大</title>
 <style>
-  :root {
-    /* 底色：暖米白；主色：深青綠（按鈕）；點綴：琥珀黃（成長條、小雞） */
-    --bg: #fbf7ef; --card: #ffffff; --text: #2d2a26; --muted: #7a7368;
-    --line: #ece4d6; --accent: #2f6f5e; --accent-hover: #255a4c; --warm: #f2b53a;
-    --soft: #f6f1e7;
-    --st-studying: #e3f3ec; --st-computer: #ece8f8; --st-present: #f8f2e4;
-    --st-away: #e9ecf1; --st-unsure: #e4eef9;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text);
-         font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif; }
-  main { max-width: 760px; margin: 0 auto; padding: 28px 16px 48px; }
-  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: .5px; }
-  .sub { color: var(--muted); font-size: 14px; margin: 0 0 20px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px;
-          padding: 18px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(60, 45, 20, .05); }
-  .pet-card { text-align: center; transition: background 1.2s ease; }
-  /* 像素小雞：16×16 的 SVG 放大，保持方塊邊緣 */
-  .pet { display: inline-block; width: 128px; height: 128px; margin-top: 4px; transition: transform .8s ease, opacity .8s; }
-  .pet svg { width: 100%; height: 100%; display: block; shape-rendering: crispEdges; }
-  .pet.studying { animation: bob 3s steps(4) infinite; }
-  .pet.computer { animation: type 1.2s steps(2) infinite; }
-  @keyframes type { 50% { transform: translateX(4px); } }
-  .pet.away { opacity: .75; transform: translateY(6px); }
-  .pet.tired { animation: bob 5s steps(3) infinite; opacity: .8; }
-  .pet.weak { transform: rotate(12deg); opacity: .6; }
-  .pet.dead { filter: grayscale(1); transform: rotate(90deg); opacity: .5; }
-  .pet.welcome { animation: bob .5s steps(4) 3; }
-  .pet.paused { animation: none; }
-  @keyframes bob { 50% { transform: translateY(-8px); } }
-  .ground { width: 140px; height: 6px; margin: 0 auto; border-radius: 3px; background: rgba(60, 45, 20, .1); }
-  .badge { font-size: 26px; height: 32px; }
-  .stage { color: var(--muted); font-size: 14px; }
-  .state { display: inline-block; font-size: 18px; font-weight: 700; margin: 10px 0 6px; padding: 4px 14px;
-           border-radius: 999px; background: rgba(255, 255, 255, .75); }
-  .msg { font-size: 15px; color: #4d473f; min-height: 22px; }
-  .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
-  .stat { background: rgba(255, 255, 255, .7); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
-  .stat b { display: block; font-size: 20px; color: var(--accent); font-variant-numeric: tabular-nums; }
-  .stat span { color: var(--muted); font-size: 13px; }
-  .bar { height: 10px; background: rgba(60, 45, 20, .08); border-radius: 5px; overflow: hidden; margin-top: 12px; }
-  .bar > div { height: 100%; width: 0; background: var(--warm); transition: width .6s; }
-  h2 { font-size: 16px; margin: 0 0 10px; color: var(--accent); }
-  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  button { font: inherit; font-size: 14px; padding: 8px 14px; border-radius: 10px;
-           border: 1px solid var(--line); background: var(--card); color: var(--text); cursor: pointer; }
-  button:hover { border-color: var(--accent); }
-  button:disabled { opacity: .5; cursor: default; }
-  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-  button.primary:hover { background: var(--accent-hover); }
-  #conn { font-size: 14px; color: var(--muted); }
-  pre { background: #23262b; color: #d7e7df; font-size: 12px; padding: 10px; border-radius: 10px;
-        height: 160px; overflow: auto; margin: 0; white-space: pre-wrap; word-break: break-all; }
-  .note { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip { border-radius: 999px; padding: 6px 12px; font-size: 14px; background: var(--soft); color: var(--muted); }
-  .chip.on { background: #dff2ea; color: #1f5c4a; font-weight: 700; }
-  .chip.weak { background: #fdf0d2; color: #7a5410; }
-  .hint { font-size: 14px; margin: 10px 0 0; padding: 8px 12px; border-radius: 10px; background: var(--soft); }
-  select, input { font: inherit; padding: 7px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--text); max-width: 100%; }
-  .setup { font-size: 14px; line-height: 1.8; padding-left: 22px; }
-  #phoneNotice { color: #7a5410; min-height: 22px; font-size: 14px; margin-top: 8px; }
-  #micNotice { color: var(--muted); min-height: 20px; font-size: 13px; }
-  #micNotice.noisy { color: #8a3b12; font-weight: 700; }
-  @media (max-width: 480px) { .stats { grid-template-columns: 1fr; } .pet { width: 104px; height: 104px; } }
+:root{--paper:#f7f5ec;--ink:#35483d;--muted:#7b8274;--line:#dedfd2;--green:#526e52;--sage:#e7eddf;--yellow:#edbd57;--wood:#e6c99d}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.7 "Microsoft JhengHei","PingFang TC",sans-serif}button,input{font:inherit}button{cursor:pointer;border:1px solid var(--line);background:#fffdf7;color:var(--ink);border-radius:8px;min-height:44px;padding:9px 17px;display:inline-flex;align-items:center;justify-content:center;gap:9px;transition:background .2s,transform .2s}button:hover:not(:disabled){background:var(--sage);transform:translateY(-1px)}button:disabled{opacity:.5;cursor:default}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #9a7526;outline-offset:4px}.primary{background:var(--green);color:white;border-color:var(--green)}.primary:hover:not(:disabled){background:#3d593d}.icon{width:20px;height:20px;display:inline-block;vertical-align:middle;flex:none;image-rendering:pixelated;shape-rendering:crispEdges}main{max-width:1180px;margin:auto;padding:26px 34px 20px;position:relative}.topbar{display:flex;align-items:center;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid var(--line);gap:12px}.brand{display:flex;gap:13px;align-items:center}.brandmark{width:42px;height:42px;background:var(--sage);display:grid;place-items:center;border-radius:10px}.brandmark .icon{width:27px;height:27px}.brand strong{font-size:18px;letter-spacing:2px}.eyebrow{font-size:10px;letter-spacing:2px;color:var(--muted)}.topactions{display:flex;align-items:center;gap:18px}.status{font-size:12px;display:flex;align-items:center;gap:8px}.dot{width:6px;height:6px;border-radius:50%;background:#a8ad9c}.dot.online{background:#68864b}.iconbutton{width:44px;padding:10px}.hero{padding:37px 0 30px;display:flex;justify-content:space-between;align-items:center;gap:20px}h1{font-size:30px;letter-spacing:2px;line-height:1.5;margin:8px 0 9px;font-weight:600}.hero p{color:var(--muted);margin:0;font-size:13px}h2,h3,p{margin-top:0}h2{font-size:15px;letter-spacing:1px;font-weight:600}.roomcard{border:1px solid #cbd1be;border-radius:13px;overflow:hidden;background:#fffdf7;box-shadow:0 5px 0 #e8e8dc}.roomtop{padding:12px 20px;display:flex;justify-content:space-between;align-items:center}.roomtop h2{margin:0;display:flex;align-items:center;gap:9px}.pill{font-size:11px;padding:3px 11px;background:var(--sage);border-radius:5px}.room{position:relative;height:390px;overflow:hidden;background:#e8eddf}.roomscene{width:100%;height:100%;display:block;shape-rendering:crispEdges}.roomnote{position:absolute;left:22px;top:17px;font-size:11px;letter-spacing:1px;color:#78836c}.roomcaption{position:absolute;bottom:12px;left:20px;right:20px;text-align:center;font-size:12px;color:#7b6950;pointer-events:none}.roomfooter{padding:16px 21px;display:flex;align-items:center;justify-content:space-between;gap:15px}.identity{display:flex;align-items:center;gap:12px}.avatar{width:44px;height:44px;background:#f3e9ca;border-radius:8px;padding:5px}.avatar svg{width:100%;height:100%}.identity strong{font-size:14px}.tiny{font-size:11px;color:var(--muted)}.energy{width:185px}.energylabel{display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px}.track{height:6px;border-radius:5px;background:#e9eade;overflow:hidden}.fill{height:100%;width:0;background:#91a374;border-radius:5px;transition:width .8s}.cards{display:grid;grid-template-columns:1fr 1fr 1.14fr;gap:15px;margin-top:26px}.card{border:1px solid var(--line);border-radius:11px;background:#fffdf7;padding:21px 22px;min-width:0}.cardhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.cardhead h2{margin:0}.cardhead>.icon{color:#849477}.metric{font-size:34px;line-height:1.2;letter-spacing:1px;font-variant-numeric:tabular-nums}.metric small{font-size:12px;letter-spacing:0;margin-left:8px;color:var(--muted)}.card p{font-size:12px;color:var(--muted);margin:10px 0}.card .track{margin-top:17px}.cardfoot{font-size:11px;color:var(--muted);margin-top:8px}.pantryrow{display:flex;align-items:center;justify-content:space-between;gap:8px}.feedbutton{margin-top:9px;width:100%;background:#f5e9c9;border-color:#e8d9b1;font-size:12px}.stages{display:flex;justify-content:space-between;gap:4px;margin:19px 0 8px}.stage{text-align:center;opacity:.32;flex:1;font-size:9px}.stage.reached{opacity:1}.stage.current .stageart{background:#f4e7bf;border-color:#d9be79}.stageart{width:38px;height:38px;padding:4px;border:1px solid transparent;border-radius:7px;margin:0 auto 5px}.stageart svg{width:100%;height:100%}.walkway{height:84px;position:relative;display:flex;align-items:end;justify-content:space-between;padding:0 20px 11px;border-bottom:1px dashed var(--line);margin-bottom:24px}.walkway .icon{height:26px;width:26px;color:#9ba786}.bottomcards{display:grid;grid-template-columns:1.25fr 1fr;gap:20px}.journal{padding:5px 4px}.sectionlabel{display:flex;align-items:center;gap:9px;margin-bottom:12px}.diary{list-style:none;padding:0;margin:0}.diary li{display:flex;gap:14px;align-items:baseline;padding:9px 0;border-bottom:1px solid #e8e8dc;font-size:12px}.diary time{color:#929785;font-size:10px;font-variant-numeric:tabular-nums}.restcard{background:var(--sage);border:0;display:flex;gap:18px;align-items:center;padding:25px}.restart{width:54px;flex:none}.restart .icon{width:50px;height:50px;color:#879776}.restcard h2{margin-bottom:7px}.restcard p{margin:0;font-size:12px}.footer{text-align:center;color:#939984;font-size:10px;letter-spacing:2px;padding:28px 0 7px}.wanderer{position:absolute;left:0;top:0;width:78px;height:94px;z-index:4;pointer-events:none;will-change:transform}.petbutton{display:block;min-height:0;padding:0;width:78px;height:78px;border:0;background:transparent!important;pointer-events:auto;outline-offset:0!important}.petbutton:hover{transform:none!important}.petart{display:block;width:100%;height:100%;transform:scaleX(var(--facing,1))}.petart svg{display:block;width:100%;height:100%;overflow:visible;image-rendering:pixelated;shape-rendering:crispEdges}.shadow{position:absolute;bottom:9px;left:15px;width:48px;height:8px;background:#70633a24;border-radius:50%;z-index:-1}.bubble{position:absolute;top:-16px;right:-4px;background:#fffdf4;border:1px solid #d7dccb;border-radius:6px;padding:4px;line-height:0;transition:opacity .2s}.bubble .icon{width:16px;height:16px}.spark{position:absolute;left:-6px;top:20px;color:#c39136;opacity:0}.spark .icon{width:15px;height:15px}.wanderer[data-pose=walk] .petart svg{animation:waddle .35s steps(2) infinite}.wanderer[data-pose=idle] .petart svg{animation:breathe 2.4s steps(3) infinite}.wanderer[data-pose=read] .petart svg{animation:reading 2.8s steps(3) infinite}.wanderer[data-pose=eat] .petart svg{animation:peck .65s steps(3) infinite}.wanderer[data-pose=hop] .petart svg{animation:hop .55s steps(4) infinite}.wanderer[data-pose=hop] .spark{animation:twinkle .7s steps(2) infinite}.wanderer[data-pose=sleep] .petart svg{animation:breathe 3.5s steps(3) infinite;filter:saturate(.7)}.wanderer[data-pose=egg] .petart svg{animation:wobble 4s steps(3) infinite}.wanderer[data-pose=tired] .petart svg{animation:breathe 4s steps(2) infinite;filter:saturate(.65)}.wanderer[data-pose=dead] .petart svg{filter:grayscale(.8);transform:rotate(12deg)}.eyes{animation:blink 5s steps(1) infinite;transform-origin:center 8px}.wanderer[data-pose=sleep] .eyes{animation:none;transform:scaleY(.2)}.wanderer[data-pose=hop] .wing{animation:flap .25s steps(2) infinite;transform-origin:5px 10px}@keyframes waddle{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-3px) rotate(4deg)}}@keyframes breathe{50%{transform:translateY(-2px)}}@keyframes reading{40%,60%{transform:rotate(6deg) translateY(2px)}}@keyframes peck{50%{transform:rotate(14deg) translateY(6px)}}@keyframes hop{50%{transform:translateY(-13px)}}@keyframes twinkle{50%{opacity:1;transform:translateY(-10px)}}@keyframes wobble{8%,16%{transform:rotate(-5deg)}12%,20%{transform:rotate(5deg)}24%,100%{transform:none}}@keyframes blink{0%,94%,98%,100%{transform:scaleY(1)}95%,97%{transform:scaleY(.15)}}@keyframes flap{50%{transform:rotate(-25deg)}}.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;transition:.2s;background:#35483d;color:#fffdf4;padding:12px 22px;border-radius:9px;box-shadow:0 6px 24px #23362b25;z-index:20;font-size:13px;max-width:calc(100% - 30px);pointer-events:none;text-align:center}.toast.visible{opacity:1;transform:translateX(-50%) translateY(0)}dialog{padding:26px;border:1px solid var(--line);border-radius:14px;max-width:410px;width:calc(100% - 32px);color:var(--ink);background:var(--paper)}dialog::backdrop{background:#273a2d66;backdrop-filter:blur(3px)}.dialoghead{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.dialoghead h2{margin:0}dialog p{font-size:13px;color:var(--muted)}.settingrow{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:16px 0;gap:15px}.settingrow span{font-size:13px}input{width:100%;border:1px solid var(--line);background:#fffdf7;border-radius:6px;padding:11px;margin:8px 0 12px;color:var(--ink)}label{font-size:12px}.addressbox[hidden]{display:none}.addressbox button{width:100%}.settingsnote{font-size:11px!important;margin-bottom:0}.closebutton{font-size:12px}.demo-note{font-size:10px;color:#8a7850;margin-top:8px}[hidden]{display:none!important}
+@media(min-width:1400px){main{padding-top:34px}}@media(max-width:700px){main{padding:18px 17px}.brand strong{font-size:15px;letter-spacing:1px}.brand .eyebrow{display:none}.brandmark{width:36px;height:36px}.topactions{gap:10px}.status{font-size:10px}.hero{padding:27px 0 23px;display:block}h1{font-size:24px;letter-spacing:1px}.hero .primary{margin-top:19px;width:100%}.hero p{font-size:12px}.room{height:280px}.roomnote{font-size:9px;left:12px;top:9px}.roomtop{padding:11px 13px}.roomtop h2{font-size:13px}.roomfooter{padding:13px;gap:10px}.energy{width:112px}.avatar{width:37px;height:37px}.identity{gap:8px}.tiny{font-size:10px}.cards{grid-template-columns:1fr 1fr;gap:11px;margin-top:21px}.card{padding:17px 15px}.cards>.card:last-child{grid-column:1/-1}.metric{font-size:28px}.card h2{font-size:13px}.card p,.cardfoot{font-size:10px}.stages{margin:14px 0 4px}.stageart{width:41px;height:41px}.stage{font-size:10px}.bottomcards{grid-template-columns:1fr;gap:20px}.restcard{padding:23px}.wanderer{width:62px;height:78px}.petbutton{width:62px;height:62px}.shadow{width:39px;left:12px}.bubble{top:-17px;right:-2px}.walkway{height:81px}.roomcaption{font-size:10px}.footer{font-size:9px;letter-spacing:1px}}
+.stage{opacity:1;color:#687460}.stage .stageart{opacity:.35}.stage.reached .stageart{opacity:1}.toast{width:max-content}.feedbutton{white-space:nowrap}.cardfoot{line-height:1.8}
+@media(max-width:700px){.card p,.cardfoot{font-size:11px}.feedbutton{font-size:11px;padding:9px 7px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<main>
-  <h1>讀書小夥伴：寵物測試頁</h1>
-  <p class="sub">自動陪你讀書與休息。到時以小雞叫聲提醒；拍兩下手，小雞會叫一聲回應。</p>
-
-  <section class="card pet-card" id="petCard">
-    <div class="badge" id="badge"></div>
-    <div class="pet" id="pet" role="img" aria-label="像素小雞"></div>
-    <div class="ground"></div>
-    <div class="stage" id="stage">蛋</div>
-    <div class="state" id="stateText">等待資料</div>
-    <div class="msg" id="msg">連接開發板後，自動判斷桌前活動。</div>
-    <div id="phoneNotice"></div>
-    <div id="micNotice"></div>
-    <div class="stats">
-      <div class="stat"><b id="deskTime">0:00</b><span>累計在桌前</span></div>
-      <div class="stat"><b id="modeTime">0:00／0:00</b><span>其中 讀書／電腦</span></div>
-      <div class="stat"><b id="awayCount">0 次</b><span>離席次數</span></div>
-      <div class="stat"><b id="lastAway">—</b><span>上次離席多久</span></div>
-    </div>
-    <div class="bar"><div id="growBar"></div></div>
-    <div class="stage" id="growText"></div>
-    <div class="stage" id="lastUpdate"></div>
-    <p class="hint" id="petLifeText">等待第二週韌體資料</p>
-    <div class="stats">
-      <div class="stat"><b id="petEnergy">—</b><span>小雞活力</span></div>
-      <div class="stat"><b id="petWork">—</b><span>本輪在桌前／提醒門檻</span></div>
-      <div class="stat"><b id="petRest">—</b><span>有效離席／休息門檻</span></div>
-      <div class="stat"><b id="petCycles">—</b><span>本代學習＋休息輪數</span></div>
-    </div>
-    <p class="note" id="petSettings">遊戲活力不是健康評分。看不到人只代表離席推測。</p>
-  </section>
-
-  <section class="card">
-    <h2>Wi-Fi 連接開發板</h2>
-    <div class="row" style="margin-bottom:10px">
-      <label for="boardAddress">Ameba IP</label>
-      <input id="boardAddress" placeholder="例如 192.168.1.100" inputmode="url" aria-label="Ameba IP 位址">
-      <button id="btnOpenBoard">開啟板子網頁</button>
-    </div>
-    <div class="row">
-      <button class="primary" id="btnConnect">開始 Wi-Fi 連線</button>
-      <button id="btnDisconnect">中斷</button>
-      <button id="btnSound">叫聲：開啟</button>
-      <span id="conn">未連線</span>
-    </div>
-    <p class="note">電腦／手機與 Ameba 連到同一個 Wi-Fi，開啟 http://板子IP/ 後按「開始 Wi-Fi 連線」。板子仍需供電，不需要 USB 資料線。IP 可從路由器裝置清單、VLC 畫面或首次燒錄後的除錯輸出查看。</p>
-    <p class="note" id="soundInfo">連線時啟用音效，聲音由電腦播放。保持網頁開啟；斷線時暫停養成。</p>
-    <p class="note">板上麥克風只量音量，不錄音也不辨識說話內容。連拍兩下手會觸發小雞回應；周圍持續吵雜時顯示提示，不影響計時。</p>
-  </section>
-
-  <section class="card">
-    <h2>自動判斷</h2>
-    <p class="note" id="modeText">等待自動辨識資料</p>
-    <p class="note">書本候選搭配附近的人與桌面，可補足部分低分結果。筆電，或同一人附近的鍵盤＋滑鼠，是電腦線索；與書本同時成立時只顯示「在桌前」。手機會排除較強的遙控器／滑鼠重疊候選，並提示是否靠近人。所有結果都需持續出現，手機靠近人不等於正在使用。</p>
-  </section>
-
-  <section class="card">
-    <h2>擺放檢查（即時）</h2>
-    <div class="row" style="margin-bottom:12px">
-      <label for="checkTarget">正在校正</label>
-      <select id="checkTarget"><option value="person">人在桌前</option><option value="book">書本（請放入測試區）</option><option value="phone">手機（請放入測試區）</option></select>
-      <button id="btnExport">匯出辨識 CSV</button>
-    </div>
-    <div class="chips">
-      <span class="chip" id="chipPerson">人 —</span>
-      <span class="chip" id="chipBook">書 —</span>
-      <span class="chip" id="chipPhone">手機 —</span>
-      <span class="chip" id="chipLaptop">筆電 —</span>
-      <span class="chip" id="chipTable">桌子 —</span>
-      <span class="chip" id="chipKeyboard">鍵盤 —</span>
-      <span class="chip" id="chipMouse">滑鼠 —</span>
-      <span class="chip" id="chipRemote">遙控器 —</span>
-    </div>
-    <p class="hint" id="placeHint">連上開發板後，坐到平常讀書的位置，依提示調整鏡頭。</p>
-    <p class="note" id="inferenceInfo">等待推論資料</p>
-    <p class="note" id="recentInfo">最近 30 秒：等待資料</p>
-    <p class="note" id="relationInfo">等待關聯判斷資料</p>
-    <p class="note">每個標籤顯示原始最高分與通過門檻的比例；低分或桌面區外候選也保留最高分。分數不是準確率。CSV 保留最近 30 分鐘，含無目標時段，方便比較誤判。</p>
-  </section>
-
-  <section class="card">
-    <h2>固定擺放規格（先依此實測）</h2>
-    <ol class="setup">
-      <li>單人使用，鏡頭固定在桌前正中央、約眼睛高度，距離臉部約 60～80 公分；以水平線向下俯 30° 起始，允許在 25～35° 內調整。</li>
-      <li>VLC 畫面需同時看見肩膀、上半身及桌面，不必刻意面向鏡頭。若無法同時入鏡，先調整支架位置；角度是起始限制，並非保證最佳值。</li>
-      <li>書本、鍵盤、滑鼠的中心放在畫面青色框內（左右 10～90%、上下 38～98%）。手機可在青色框內，或靠近畫面中人的身體範圍；人與桌子使用全畫面辨識。</li>
-      <li>書本先用閱讀架與桌面成約 30～45°，讓封面或攤開的頁面清楚入鏡，寬度至少約占畫面 1/4。手機正面或背面朝鏡頭，長邊至少約占畫面高度 1/5，避免只露側邊或被手遮住。</li>
-      <li>固定檯燈位置，避免螢幕反光、逆光與晃動。用膠帶標記支架、書架及手機測試位置；平放、手持與遮擋另外測試。</li>
-    </ol>
-    <p class="note">固定規格用於縮小測試範圍；網頁無法測量實際角度或保證辨識成功。桌子只是輔助線索，不要求每次都辨識到。現有模型沒有筆、紙或手部類別。</p>
-  </section>
-
-  <section class="card">
-    <h2>小雞事件紀錄</h2>
-    <button id="btnEvents">匯出事件 CSV</button>
-    <pre id="petEvents" aria-live="polite"></pre>
-    <p class="note">保留本頁最近 300 筆事件；重新整理會清空。板子重開機也會重設養成進度。</p>
-  </section>
-
-  <section class="card">
-    <h2>網路原始資料</h2>
-    <pre id="log"></pre>
-  </section>
+<main id="home">
+ <header class="topbar"><div class="brand"><div class="brandmark" data-icon="home"></div><div><strong>啾啾的小屋</strong><div class="eyebrow">A LITTLE HOME, A LITTLE GROWTH</div></div></div><div class="topactions"><span class="status"><i class="dot" id="connectionDot"></i><span id="connectionLabel">等你回家</span></span><button class="iconbutton" id="settingsButton" aria-label="小屋設定" data-icon="gear"></button></div></header>
+ <section class="hero"><div><div class="eyebrow">HOME SWEET HOME</div><h1>一起，把日子慢慢養大。</h1><p>你讀一點書，啾啾長大一點。累了，就一起休息。</p></div><button class="primary" id="connectButton"><span data-icon="leaf"></span><span id="connectLabel">開始陪伴</span></button></section>
+ <section class="roomcard" aria-label="小雞的家"><div class="roomtop"><h2><span data-icon="sun"></span>啾啾的房間</h2><span class="pill" id="activityLabel">準備迎接新的一天</span></div>
+ <div class="room" id="room"><svg class="roomscene" viewBox="0 0 960 420" preserveAspectRatio="none" aria-hidden="true">
+ <defs><pattern id="wall" width="48" height="48" patternUnits="userSpaceOnUse"><rect width="48" height="48" fill="#e5ebdc"/><rect width="2" height="48" fill="#dce4d2"/></pattern><pattern id="floor" width="170" height="48" patternUnits="userSpaceOnUse"><rect width="170" height="48" fill="#e5c99e"/><path d="M0 0H170M0 1V48M40 30H90M110 15H140" stroke="#cfb289" stroke-width="2"/></pattern></defs>
+ <rect width="960" height="280" fill="url(#wall)"/><rect y="280" width="960" height="140" fill="url(#floor)"/><rect y="272" width="960" height="10" fill="#ad9773"/><rect y="272" width="960" height="3" fill="#d0ba92"/>
+ <rect x="338" y="33" width="280" height="195" fill="#d7deca"/><rect x="344" y="29" width="268" height="188" fill="#ad9874"/><rect x="353" y="38" width="250" height="170" fill="#d4e6de"/><rect x="541" y="53" width="23" height="23" fill="#f5d779"/><path d="M371 86h15v-7h28v7h14v9h-57zM504 116h15v-8h34v8h17v9h-66z" fill="#f9f9e9"/><path d="M353 183h28v-14h32v-17h26v15h32v16h25v-13h35v-13h26v15h31v12h15v24H353z" fill="#a5bc91"/><rect x="353" y="198" width="250" height="10" fill="#8aa679"/><path d="M474 38h9v170h-9zM353 131h250v8H353z" fill="#c2ad86"/><rect x="334" y="212" width="289" height="10" fill="#a28a66"/><path d="M322 24h27v105h-9v60h-18zM608 24h27v165h-18v-60h-9z" fill="#faf4dc"/><path d="M326 24h5v158h-5zM624 24h5v158h-5z" fill="#e6dbba"/>
+ <rect x="88" y="75" width="91" height="84" fill="#b7a17d"/><rect x="95" y="82" width="77" height="70" fill="#f9f2db"/><path d="M117 125h13v-17h13v-13h9v30h9v10h-44z" fill="#9dac83"/><rect x="107" y="96" width="12" height="12" fill="#e4bf66"/>
+ <rect x="109" y="228" width="194" height="70" fill="#bc9b6e"/><rect x="99" y="214" width="217" height="14" fill="#9e815a"/><rect x="99" y="211" width="217" height="5" fill="#ceb284"/><rect x="114" y="228" width="13" height="108" fill="#9e815a"/><rect x="284" y="228" width="13" height="108" fill="#9e815a"/><rect x="122" y="238" width="170" height="39" fill="#d6b586"/><rect x="197" y="251" width="19" height="5" fill="#9e815a"/>
+ <rect x="124" y="201" width="50" height="9" fill="#87987c"/><rect x="127" y="194" width="43" height="7" fill="#f4e6c2"/><rect x="125" y="190" width="47" height="5" fill="#b7835d"/><rect x="249" y="173" width="5" height="38" fill="#64785e"/><path d="M233 154h36v11h7v11h-50v-11h7z" fill="#8fa582"/><rect x="239" y="208" width="26" height="4" fill="#64785e"/><rect x="197" y="192" width="17" height="19" fill="#eee8d5"/><path d="M214 196h7v10h-7" fill="none" stroke="#eee8d5" stroke-width="4"/>
+ <rect x="185" y="274" width="53" height="49" fill="#91a07b"/><rect x="179" y="318" width="65" height="11" fill="#758963"/><path d="M185 329h7v32h-7zM231 329h7v32h-7z" fill="#9e815a"/>
+ <rect x="740" y="81" width="145" height="9" fill="#a28a66"/><rect x="750" y="39" width="13" height="42" fill="#94a17f"/><rect x="765" y="46" width="16" height="35" fill="#bd946c"/><rect x="783" y="36" width="11" height="45" fill="#dfcd9e"/><rect x="797" y="42" width="12" height="39" fill="#829082"/><rect x="842" y="62" width="23" height="19" fill="#b39670"/><path d="M851 62V39h-14v-9h14v9h15v10h-10v13z" fill="#849c70"/>
+ <rect x="760" y="131" width="86" height="67" fill="#c1af8d"/><rect x="766" y="137" width="74" height="55" fill="#f9f2df"/><path d="M787 154h28v5h5v20h-38v-20h5z" fill="#dfba5b"/><rect x="791" y="161" width="4" height="4" fill="#725f3f"/><rect x="811" y="161" width="4" height="4" fill="#725f3f"/><rect x="802" y="168" width="8" height="4" fill="#c48d43"/>
+ <rect x="713" y="283" width="150" height="47" fill="#ad936e"/><rect x="704" y="273" width="168" height="32" fill="#bdab83"/><rect x="713" y="267" width="150" height="30" fill="#eff0dc"/><rect x="755" y="271" width="103" height="29" fill="#9daa84"/><path d="M769 272v27m22-27v27m22-27v27m22-27v27" stroke="#b6c29f" stroke-width="3"/><rect x="719" y="263" width="37" height="20" fill="#faf4df"/><rect x="709" y="255" width="8" height="81" fill="#a98d65"/><rect x="859" y="275" width="8" height="61" fill="#a98d65"/>
+ <path d="M895 287h37l-5 45h-27z" fill="#ba9872"/><rect x="891" y="282" width="44" height="9" fill="#a98761"/><path d="M912 282v-61h-19v-18h14v9h5v-26h10v37h14v-15h9v26h-23v48z" fill="#7e9669"/><rect x="904" y="242" width="10" height="26" fill="#9daf81"/>
+ <path d="M354 325h257v7h18v38h-18v7H354v-7h-18v-38h18z" fill="#d3d5ad"/><path d="M360 332h245v7h14v24h-14v7H360v-7h-14v-24h14z" fill="#b9c39d"/><path d="M373 338h222M373 363h222" stroke="#dce0ba" stroke-width="3"/>
+ <rect x="652" y="352" width="54" height="7" fill="#bca075"/><path d="M657 340h44v13h-5v4h-34v-4h-5z" fill="#96a082"/><rect x="657" y="338" width="44" height="6" fill="#6e8066"/><path d="M667 337h5v5h-5zM679 336h5v5h-5zM689 338h5v4h-5z" fill="#e3bc65"/>
+ </svg><div class="roomnote">留一點時間，陪自己也陪啾啾。</div><div class="roomcaption" id="roomCaption">小屋已經準備好了，等你一起開始。</div></div>
+ <div class="roomfooter"><div class="identity"><div class="avatar" id="avatar"></div><div><strong>啾啾</strong><div class="tiny" id="petIdentity">一顆小小的期待</div></div></div><div class="energy"><div class="energylabel"><span>今日活力</span><span id="energyLabel">等待陪伴</span></div><div class="track"><div class="fill" id="energyFill"></div></div></div></div></section>
+ <section class="cards" aria-label="陪伴與成長"><article class="card"><div class="cardhead"><h2>這一輪的陪伴</h2><span data-icon="book"></span></div><div class="metric" id="sessionTime">00:00</div><p id="sessionHint">坐好，翻開書，慢慢開始。</p><div class="track"><div class="fill" id="sessionFill"></div></div><div class="cardfoot" id="sessionFoot">記得留一點時間休息</div></article>
+ <article class="card"><div class="cardhead"><h2>啾啾的糧倉</h2><span data-icon="seed"></span></div><div class="pantryrow"><div class="metric"><span id="foodCount">0</span><small>份穀穀</small></div><span data-icon="bowl"></span></div><p id="rewardHint">每認真學習 5 分鐘，收穫 1 份。</p><button class="feedbutton" id="feedButton" disabled><span data-icon="seed"></span><span id="feedLabel">餵啾啾吃穀穀</span></button><div class="cardfoot" id="feedHint">一起學習，收集第一份穀穀。</div></article>
+ <article class="card"><div class="cardhead"><h2>慢慢長大的足跡</h2><span data-icon="leaf"></span></div><div class="stages" id="growthStages"></div><p id="growthHint">每一次陪伴，都是長大的養分。</p><div class="cardfoot">餵食 +1 成長 · 完整學習與休息 +2 成長</div></article></section>
+ <div class="walkway" id="walkway" aria-hidden="true"><span data-icon="plant"></span><span data-icon="plant"></span></div>
+ <section class="bottomcards"><article class="journal"><h2 class="sectionlabel"><span data-icon="spark"></span>小屋日記</h2><ul class="diary" id="diary"><li><time>今天</time><span>故事還沒開始，先找個舒服的位置吧。</span></li></ul></article><article class="card restcard"><div class="restart" data-icon="moon"></div><div><h2>休息，也是一種進步。</h2><p id="restHint">時間到了，啾啾會輕輕叫你。離開桌前走一走，回來再一起努力。</p><div class="demo-note" id="demoNote" hidden>目前是短時間體驗，獎勵與休息會比較快到來。</div></div></article></section>
+ <footer class="footer">一點專注，一點休息，一間屬於你們的小屋。</footer>
+ <div class="wanderer" id="wanderer" data-pose="egg"><div class="bubble" id="petBubble"></div><span class="spark" data-icon="spark"></span><button class="petbutton" id="petButton" aria-label="摸摸啾啾"><span class="petart" id="petArt"></span></button><div class="shadow"></div></div>
 </main>
-
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<dialog id="settings"><div class="dialoghead"><h2>小屋設定</h2><button class="closebutton" id="closeSettings">完成</button></div><p>讓 Ameba 和這台裝置連上同一個 Wi-Fi，打開小屋，就能一起學習。</p><div class="settingrow"><span>休息提醒聲音</span><button id="soundButton" aria-pressed="true">已開啟</button></div><div class="settingrow"><span id="settingsConnection">還沒開始陪伴</span><button id="disconnectButton" disabled>暫停陪伴</button></div><div class="addressbox" id="addressBox" hidden><label for="homeAddress">小屋位址</label><input id="homeAddress" placeholder="例如 192.168.1.88" inputmode="url" autocomplete="off" spellcheck="false"><button class="primary" id="openHome">前往小屋</button><p>輸入 Ameba 的 Wi-Fi 位址，從小屋開啟陪伴。</p></div><p class="settingsnote">穀穀與成長由小屋記住；網頁重新開啟會讀回，Ameba 斷電後則開始新的故事。餵食不會代替休息。</p></dialog>
 <script>
-
-// 像素小雞：每列 16 格，K 輪廓、Y 身體、L 亮部、O 嘴腳、P 腮紅、W 蛋殼、S 陰影、H 反光
-const PALETTE = { K: "#3b2a1a", Y: "#ffd447", L: "#fff1a6", O: "#f28c28", P: "#ff9aa2",
-                  W: "#fdf3dc", S: "#e8d6ad", H: "#ffffff", Z: "#6f95c9" };
-// 睡覺時右上角的像素 Z（列, 起始欄, 圖樣）
-const SLEEP_Z = [[0, 12, "ZZZZ"], [1, 14, "Z"], [2, 13, "Z"], [3, 12, "ZZZZ"]];
-const SPRITES = {
-  egg: [
-    "................", "......KKKK......", ".....KWWWWK.....", "....KWHWWWWK....",
-    "...KWHWWWWWWK...", "...KWHWWWWWWK...", "..KWWWWWWWWWWK..", "..KWWWWWSWWWWK..",
-    "..KWWWWWWWWWWK..", "..KWWSWWWWWWSK..", "..KWWWWWWWWWSK..", "...KWWWWWWWSK...",
-    "...KSWWWWWWSSK..", "....KSSSSSSK....", ".....KKKKKK.....", "................",
-  ],
-  baby: [
-    "................", "......KKKK......", ".....KYYYYK.....", "....KYYYYYYK....",
-    "....KYKYYKYK....", "....KPYOOYPK....", "....KYYYYYYK....", "...KYYYYYYYYK...",
-    "..KYYYYYYYYYYK..", "..KWKWWKKWWKWK..", "..KWWWWWWWWWWK..", "..KWSWWWWWWSWK..",
-    "...KWWWWWWWWK...", "....KKKKKKKK....", "................", "................",
-  ],
-  adult: [
-    "................", "......KK........", ".....KYYKKK.....", "....KYYYYYYK....",
-    "...KYYYYYYYYK...", "...KYYKYYKYYK...", "...KYPYOOYPYK...", "...KYYYOOYYYK...",
-    "..KYYYYYYYYYYK..", ".KYYLLYYYYYYYYK.", ".KYYLLLYYYYYYYK.", ".KYYYLLYYYYYYYK.",
-    "..KYYYYYYYYYYK..", "...KKKKKKKKKK...", ".....KO..OK.....", ".....OO..OO.....",
-  ],
-};
-// 睡覺時把眼睛那一列換成閉眼的橫線
-const SLEEP_EYES = { baby: [4, "....KKKYYKKK...."], adult: [5, "...KYKKYYKKYK..."] };
-
-function pixelSvg(name, sleeping) {
-  const rows = SPRITES[name].slice();
-  if (sleeping && SLEEP_EYES[name]) rows[SLEEP_EYES[name][0]] = SLEEP_EYES[name][1];
-  if (sleeping) SLEEP_Z.forEach(([y, x, s]) => {
-    rows[y] = rows[y].slice(0, x) + [...s].map((c, i) => rows[y][x + i] === "." ? c : rows[y][x + i]).join("") + rows[y].slice(x + s.length);
-  });
-  let rects = "";
-  rows.forEach((row, y) => [...row].forEach((c, x) => {
-    if (PALETTE[c]) rects += `<rect x="${x}" y="${y}" width="1" height="1" fill="${PALETTE[c]}"/>`;
-  }));
-  return `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">${rects}</svg>`;
-}
-
-// 先用短時間測成長
-const STAGES = [
-  { min: 0,   pet: "egg",   name: "蛋" },
-  { min: 60,  pet: "baby",  name: "幼年" },
-  { min: 300, pet: "adult", name: "成年" },
-];
-
-const STATES = {
-  STUDYING: { text: "讀書中", msg: "小夥伴在旁邊陪你讀書。", cls: "studying", bg: "--st-studying" },
-  COMPUTER: { text: "用電腦中", msg: "小夥伴在旁邊陪你打字。", cls: "computer", bg: "--st-computer" },
-  PRESENT:  { text: "在桌前", msg: "小夥伴在旁邊陪你。", cls: "", bg: "--st-present" },
-  AWAY:     { text: "未偵測到使用者", msg: "小夥伴趴著睡覺，等你回來。💤", cls: "away", bg: "--st-away" },
-  UNSURE:   { text: "無法確認", msg: "畫面不太清楚，這段時間不列入累計。", cls: "", bg: "--st-unsure" },
-};
-
+'use strict';
 const $ = id => document.getElementById(id);
-const blank = () => ({ state: null, deskS: 0, studyS: 0, computerS: 0, awayCount: 0, lastAwayS: 0,
-                       phone: false, phoneNear: false, mic: -1, micPeak: -1, noisy: false });
-let current = blank();
-
-function fmt(sec) {
-  const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
-  return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(s).padStart(2, "0");
-}
-
-// 把板子狀態畫在頁面上
-function render() {
-  const st = STATES[current.state];
-  let stageIdx = 0;
-  STAGES.forEach((s, i) => { if (current.deskS >= s.min) stageIdx = i; });
-  const stage = STAGES[stageIdx], next = STAGES[stageIdx + 1];
-
-  $("pet").innerHTML = pixelSvg(stage.pet, current.state === "AWAY");
-  $("pet").className = "pet " + (st ? st.cls : "");
-  $("stage").textContent = stage.name;
-  $("deskTime").textContent = fmt(current.deskS);
-  $("modeTime").textContent = fmt(current.studyS) + "／" + fmt(current.computerS);
-  $("awayCount").textContent = current.awayCount + " 次";
-  $("lastAway").textContent = current.awayCount ? fmt(current.lastAwayS) : "—";
-
-  if (st) {
-    $("stateText").textContent = st.text;
-    $("msg").textContent = st.msg;
-    $("petCard").style.background = `var(${st.bg})`;
-  }
-  $("badge").textContent = current.state === "UNSURE" ? "❓" : "";
-  $("phoneNotice").textContent = !current.phone ? '' : current.phoneNear
-    ? '📱 手機持續出現在人附近；位置關聯不代表正在使用，不影響讀書計時。'
-    : '📱 看到手機；尚未判定是否使用，不影響讀書計時。';
-  $("micNotice").textContent = current.mic < 0 ? '麥克風：無資料' : current.noisy
-    ? `🔊 周圍有點吵（音量 ${current.mic}），小雞摀住耳朵；不影響計時。`
-    : `🎙 麥克風：安靜（音量 ${current.mic}，最高 ${current.micPeak}）· 拍兩下手跟小雞打招呼`;
-  $("micNotice").className = current.noisy ? 'noisy' : '';
-
-  if (next) {
-    const pct = (current.deskS - stage.min) / (next.min - stage.min) * 100;
-    $("growBar").style.width = Math.min(100, pct) + "%";
-    $("growText").textContent = `再陪伴 ${fmt(next.min - current.deskS)} 成長為「${next.name}」`;
-  } else {
-    $("growBar").style.width = "100%";
-    $("growText").textContent = "已成長到最終階段";
-  }
-  $("lastUpdate").textContent = "最後更新 " + new Date().toLocaleTimeString();
-  renderLife();
-}
-
-let life = null, lifeAt = 0, welcomeUntil = 0, soundEnabled = true, audioContext = null;
-let eventSegment = 0, lastEventMs = -1;
-let networkEnabled = false, networkTask = null, networkAbort = null, networkEpoch = 0;
-let lastSequence = -1, lastBoardMs = -1, eventCursor = -1, suppressSound = true;
-let replayingEvents = false, clapQuietUntil = 0;
-const petEvents = [], eventKeys = new Set();
-const PET_PHASES = ['HEALTHY', 'TIRED', 'WEAK', 'DEAD'];
-const EVENT_NAMES = { WELCOME: '回座歡迎', LEAVE: '離席睡覺', REMIND: '休息提醒',
-  WEAK: '活力不足', DIED: '小雞死亡', RESTED: '完成休息', REBORN: '重新孵蛋',
-  CLAP: '拍手互動', NOISY: '環境變吵', QUIET: '恢復安靜' };
-
-// 先經過點擊，瀏覽器才允許出聲
-async function enableAudio() {
-  if (!soundEnabled) return;
-  try {
-    const Audio = globalThis.AudioContext || globalThis.webkitAudioContext;
-    if (!Audio) { $('soundInfo').textContent = '目前無法播放叫聲，仍會顯示休息提醒。'; return; }
-    if (!audioContext) audioContext = new Audio();
-    await audioContext.resume();
-    $('soundInfo').textContent = '到休息時間提醒一次，繼續久坐到虛弱再提醒一次；拍手只跳躍，不出聲。';
-  } catch (e) { $('soundInfo').textContent = '音效未啟用，可按叫聲按鈕重試；文字提醒仍有效。'; }
-}
-
-// 只在兩個休息提醒階段出聲
-function chirp(kind = 'remind') {
-  if (!soundEnabled || !audioContext || audioContext.state !== 'running') return;
-  const count = kind === 'weak' ? 2 : 3;
-  try {
-    // 播完先等一下，避免麥克風聽到自己就跳
-    clapQuietUntil = Date.now() + 5000;
-    for (let i = 0; i < count; i++) {
-      const start = audioContext.currentTime + i * .22;
-      const osc = audioContext.createOscillator(), gain = audioContext.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(2200, start);
-      osc.frequency.exponentialRampToValueAtTime(3600, start + .06);
-      osc.frequency.exponentialRampToValueAtTime(1900, start + .14);
-      gain.gain.setValueAtTime(.001, start);
-      gain.gain.exponentialRampToValueAtTime(.10, start + .02);
-      gain.gain.exponentialRampToValueAtTime(.001, start + .15);
-      osc.connect(gain); gain.connect(audioContext.destination);
-      osc.onended = () => { osc.disconnect(); gain.disconnect(); };
-      osc.start(start); osc.stop(start + .16);
-    }
-  } catch (e) { $('soundInfo').textContent = '叫聲播放失敗，請查看文字提醒。'; }
-}
-$('btnSound').onclick = async () => {
-  soundEnabled = !soundEnabled;
-  $('btnSound').textContent = soundEnabled ? '叫聲：開啟' : '叫聲：靜音';
-  if (soundEnabled) await enableAudio();
+const ICONS = {
+ home:['...##...','..####..','.######.','########','.######.','.##..##.','.##..##.','.######.'],
+ gear:['..#..#..','.######.','########','.##..##.','.##..##.','########','.######.','..#..#..'],
+ sun:['...##...','.#.##.#.','..####..','########','########','..####..','.#.##.#.','...##...'],
+ book:['####.###','#..###.#','#..###.#','#..###.#','#..###.#','#..###.#','####.###','...#.#..'],
+ seed:['.....##.','....###.','..####..','.####...','###.##..','##..#...','...##...','........'],
+ bowl:['........','..#.#...','.#.#.#..','########','#......#','.######.','..####..','........'],
+ leaf:['.....###','...#####','..######','.#######','.######.','#####...','###.....','#.......'],
+ moon:['...###..','..##....','.##.....','.##.....','.##...#.','.###.##.','..####..','...##...'],
+ heart:['.##..##.','########','########','########','.######.','..####..','...##...','........'],
+ spark:['...#....','...#..#.','..###...','#######.','..###...','...#....','.#.#....','........'],
+ pause:['........','.##..##.','.##..##.','.##..##.','.##..##.','.##..##.','........','........'],
+ sleep:['.######.','.....##.','....##..','...##...','..##....','.######.','........','........'],
+ plant:['...##...','.####...','.#####..','...####.','...##...','.######.','..####..','..####..']
 };
-
-function renderLife() {
-  if (!life) return;
-  const stale = Date.now() - lifeAt > 3000;
-  const paused = life.paused || stale;
-  const dead = life.phase === 'DEAD', sleeping = current.state === 'AWAY';
-  const name = dead || !life.started ? 'egg' : life.cycles >= 3 ? 'adult' : 'baby';
-  $('pet').innerHTML = pixelSvg(name, sleeping && !dead);
-  const activity = current.state === 'STUDYING' ? 'studying' : current.state === 'COMPUTER' ? 'computer' : '';
-  $('pet').className = 'pet ' + (paused ? 'paused' : dead ? 'dead' : sleeping ? 'away' :
-    life.phase === 'WEAK' ? 'weak' : life.phase === 'TIRED' ? 'tired' :
-    Date.now() < welcomeUntil ? 'welcome' : activity);
-  $('stage').textContent = `第 ${life.generation} 代 · ${dead ? '死亡，等待休息後重生' : name === 'egg' ? '蛋' : name === 'baby' ? '幼年' : '成年'}`;
-  $('badge').textContent = paused ? '⏸' : dead ? '💀' : sleeping ? '💤' :
-    life.phase !== 'HEALTHY' ? '🥱' : Date.now() < welcomeUntil ? '🐣' : current.noisy ? '🙉' :
-    current.state === 'STUDYING' ? '📖' : current.state === 'COMPUTER' ? '💻' : '';
-  $('petLifeText').textContent = paused ? '養成暫停：等待穩定辨識與連線，不扣活力也不計休息。' :
-    dead ? '小雞已死亡。完成有效離席休息後會變回蛋，回座後重新孵化。' :
-    sleeping ? (life.rest >= life.restGoal ? '休息完成，回座後再一起開始。' : '小雞陪你休息；連續離席達門檻才算完成。') :
-    life.phase === 'WEAK' ? '小雞很虛弱了，離開桌前休息一下吧。' :
-    life.phase === 'TIRED' ? '這輪已到休息時間，小雞也累了。' : '小雞正在陪伴你；完成學習與休息才能成長。';
-  $('petEnergy').textContent = life.energy + ' / 100';
-  $('petWork').textContent = fmt(life.work) + ' / ' + fmt(life.remindGoal);
-  $('petRest').textContent = fmt(life.rest) + ' / ' + fmt(life.restGoal);
-  $('petCycles').textContent = life.cycles + ' 輪';
-  $('growBar').style.width = Math.min(100, life.cycles / 3 * 100) + '%';
-  $('growText').textContent = dead ? '完成休息後重新養成，桌前總紀錄保留。' :
-    life.cycles >= 3 ? '已成年，仍需要定時休息。' : `再完成 ${3 - life.cycles} 輪學習＋休息成為成年小雞`;
-  $('petSettings').textContent = `${life.demo ? '展示設定' : '一般設定'}：${fmt(life.remindGoal)} 提醒、休息 ${fmt(life.restGoal)}；超時在座 ${fmt(life.decay)} 活力耗盡。這是遊戲設定，不是健康診斷。`;
+function icon(name) { return '<svg class="icon" viewBox="0 0 8 8" aria-hidden="true">' + (ICONS[name] || ICONS.spark).flatMap((r,y)=>[...r].map((v,x)=>v==='#'?`<rect x="${x}" y="${y}" width="1" height="1" fill="currentColor"/>`:'')).join('') + '</svg>'; }
+document.querySelectorAll('[data-icon]').forEach(e=>e.innerHTML=icon(e.dataset.icon));
+const GROWTH = [ ['小小的蛋',0], ['小絨球',0], ['小探險家',3], ['陪讀夥伴',8], ['小屋守護者',16] ];
+const PALETTE = { o:'#715d3d', y:'#edc45e', l:'#f6dc87', b:'#d9973d', c:'#e9ae68', w:'#fff5d9', g:'#81966c', d:'#607854' };
+function chick(stage) {
+ const egg=['................','................','......oooo......','.....owwwwo.....','....owwwwwwo....','....owwwwwwo....','...owwwwwwwwo...','...owwwwwwwwo...','...owwwwcwwwo...','...owwwcwwwwo...','...owwwwwwwwo...','....owwwwwwo....','.....oooooo.....','................','................','................'];
+ const body=['................','......yy........','.....oyyo.......','....oyyyyoo.....','...oyyyyyyyo....','..oyyllllyyyo...','..oyyllllyyyo...','..oyyyyyyyyyo...','..oyyyyyyyyyo...','..oyyyybbyyyo...','...oyyyyyyyo....','...oyyyyyyyo....','....oyyyyyo.....','.....ooooo......','.....b..b.......','....bb..bb......'];
+ const rows = stage ? body : egg;
+ let art=rows.flatMap((r,y)=>[...r].map((v,x)=>PALETTE[v]?`<rect x="${x}" y="${y}" width="1" height="1" fill="${PALETTE[v]}"/>`:'')).join('');
+ if(stage){
+  art+='<g class="eyes" fill="#574c36"><rect x="5" y="7" width="1" height="2"/><rect x="10" y="7" width="1" height="2"/></g><g fill="#e7a273"><rect x="4" y="9" width="2" height="1"/><rect x="10" y="9" width="2" height="1"/></g><g class="wing" fill="#d8aa47"><rect x="3" y="10" width="2" height="2"/><rect x="4" y="12" width="1" height="1"/></g>';
+  if(stage===1)art+='<path d="M4 12h2v1h2v-1h2v1h2v2H4z" fill="#fff5d9"/>';
+  if(stage>=3)art+='<path d="M4 11h8v1H9v2H7v-2H4z" fill="#6e8963"/>';
+  if(stage===4)art+='<path d="M5 1h1v1h1V0h2v2h1V1h1v3H5z" fill="#ba8b33"/><rect x="6" y="3" width="4" height="1" fill="#ffdf80"/>';
+ }
+ return `<svg viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">${art}</svg>`;
 }
-
-function handleLife(f) {
-  if (f.length !== 16 || !PET_PHASES.includes(f[2])) return;
-  const values = f.slice(1).filter((_, i) => i !== 1).map(Number);
-  if (values.some(n => !Number.isSafeInteger(n) || n < 0)) return;
-  const n = i => Number(f[i]);
-  if (n(3) > 100 || !n(11) || !n(12) || !n(13) || !n(8) || n(10) > 1 || n(14) > 1 || n(15) > 1) return;
-  const next = { uptime: n(1), phase: f[2], energy: n(3), work: n(4), rest: n(5),
-    cycles: n(6), rests: n(7), generation: n(8), reminders: n(9), paused: !!n(10),
-    remindGoal: n(11), restGoal: n(12), decay: n(13), demo: !!n(14), started: !!n(15) };
-  // 重連只同步狀態，不補播舊提醒
-  if (life && next.uptime >= life.uptime && next.generation === life.generation &&
-      !next.paused && networkEnabled && !suppressSound && ['PRESENT', 'STUDYING', 'COMPUTER'].includes(current.state)) {
-    if (next.phase === 'WEAK' && life.phase !== 'WEAK') chirp('weak');
-    else if (next.phase === 'TIRED' && next.reminders > life.reminders) chirp('remind');
+const STATES = {UNKNOWN:'正在找你的位置',UNSURE:'正在找你的位置',PRESENT:'在桌前陪伴',STUDYING:'一起認真讀書',COMPUTER:'一起專心學習',AWAY:'休息一下，等等見'};
+let current={state:'UNKNOWN'}, life=null, care=null, stage=-1, lastSnapshotAt=0;
+let networkEnabled=false, networkTask=null, networkAbort=null, epoch=0, lastSequence=-1, lastBoardMs=-1, eventCursor=-1, suppressSound=true;
+let soundEnabled=true, audio=null, feedBusy=false, feedAbort=null, toastUntil=0, celebrateUntil=0, eatUntil=0;
+let petPose='', bubbleName='', memories=[], eventIds=new Set();
+const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+const motion={x:0,y:0,tx:0,ty:0,ready:false,next:0,last:0,facing:1};
+function fmt(s){s=Math.max(0,Math.floor(s||0));return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;}
+function fresh(){return networkEnabled && life && Date.now()-lastSnapshotAt<=3000 && !life.paused;}
+function toast(text){$('toast').textContent=text;toastUntil=Date.now()+4000;$('toast').classList.add('visible');}
+function remember(text){memories.unshift({at:new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',hour12:false}),text});memories=memories.slice(0,5);$('diary').replaceChildren(...memories.map(m=>{const li=document.createElement('li'),time=document.createElement('time'),span=document.createElement('span');time.textContent=m.at;span.textContent=m.text;li.append(time,span);return li;}));}
+function integers(values){return values.every(v=>/^\d+$/.test(v)&&Number.isSafeInteger(Number(v)));}
+function parseLife(line){
+ const f=line.split(',');if(f.length!==16||f[0]!=='PET'||!['EGG','HEALTHY','TIRED','WEAK','DEAD'].includes(f[2])||!integers(f.slice(1).filter((_,i)=>i!==1)))return null;
+ const n=i=>Number(f[i]);if(n(3)>100||!n(8)||!n(11)||!n(12)||!n(13)||n(10)>1||n(14)>1||n(15)>1)return null;
+ return {uptime:n(1),phase:f[2],energy:n(3),work:n(4),rest:n(5),cycles:n(6),rests:n(7),generation:n(8),reminders:n(9),paused:!!n(10),remindGoal:n(11),restGoal:n(12),decay:n(13),demo:!!n(14),started:!!n(15)};
+}
+function parseState(line){const f=line.split(',');if(f.length<14||f[0]!=='STATE'||!Object.hasOwn(STATES,f[2])||f[6]!=='A'||!integers([f[1],f[3],f[4],f[5]]))return null;return {state:f[2],desk:Number(f[3]),study:Number(f[4]),computer:Number(f[5]),noisy:f[16]==='1'};}
+function parseCare(line){const f=line.trim().split(',');if(f.length!==11||f[0]!=='CARE'||!integers(f.slice(1)))return null;const n=i=>Number(f[i]);if(n(4)>99||!n(3)||!n(8)||n(7)>n(8)||n(10)>1)return null;return {boot:n(1),revision:n(2),generation:n(3),food:n(4),feeds:n(5),learned:n(6),next:n(7),goal:n(8),lastFeed:n(9),available:!!n(10)};}
+async function enableAudio(){if(!soundEnabled)return;try{audio ||= new (window.AudioContext||window.webkitAudioContext)();await audio.resume();}catch{toast('瀏覽器還沒準備好聲音，提醒仍會顯示在小屋。');}}
+function chirp(kind){if(!soundEnabled||!audio||audio.state!=='running')return;for(let i=0;i<(kind==='weak'?2:3);i++){const start=audio.currentTime+i*.23,osc=audio.createOscillator(),gain=audio.createGain();osc.type='sine';osc.frequency.setValueAtTime(1800,start);osc.frequency.exponentialRampToValueAtTime(2900,start+.07);osc.frequency.exponentialRampToValueAtTime(1500,start+.15);gain.gain.setValueAtTime(.0001,start);gain.gain.exponentialRampToValueAtTime(.09,start+.015);gain.gain.exponentialRampToValueAtTime(.0001,start+.18);osc.connect(gain);gain.connect(audio.destination);osc.start(start);osc.stop(start+.2);osc.onended=()=>{osc.disconnect();gain.disconnect();};}}
+function receiveCare(next,quiet=false){
+ // 以小屋的存量為準，晚到的回應別蓋回去。
+ if(care&&next.boot===care.boot&&next.revision<care.revision)return;
+ if(!quiet&&care&&next.boot===care.boot&&next.generation===care.generation){
+  if(next.feeds>care.feeds){eatUntil=Date.now()+6500;motion.next=0;toast('穀穀收到！啾啾的成長 +1。');remember('餵啾啾吃了穀穀，長大了一點點。');}
+  else if(next.food>care.food){celebrateUntil=Date.now()+2500;toast('認真學習的收穫：穀穀 +1。');remember('收穫一份穀穀，今天的努力有了小成果。');}
+ }
+ care=next;
+}
+function applySnapshot(text){
+ // 同一筆資料不延長有效時間，重連也不補叫。
+ const lines=text.trim().split(/\r?\n/),net=lines[0].split(',');if(net.length!==4||net[0]!=='NET'||!integers(net.slice(1)))throw Error('Incomplete home');
+ const seq=Number(net[1]),board=Number(net[3]),nextCare=parseCare(lines.find(l=>l.startsWith('CARE,'))||'');
+ const reboot=board<lastBoardMs||seq<lastSequence||(care&&nextCare&&care.boot!==nextCare.boot);
+ const quiet=suppressSound||reboot||Date.now()-lastSnapshotAt>3000;
+ if(reboot){life=null;care=null;lastSequence=-1;eventIds.clear();eatUntil=0;celebrateUntil=0;remember('小屋重新醒來，新的故事開始了。');}
+ if(seq>0&&seq!==lastSequence){
+  const next=parseLife(lines.find(l=>l.startsWith('PET,'))||''),state=parseState(lines.find(l=>l.startsWith('STATE,'))||'');
+  if(!next||!state)throw Error('Incomplete companion');
+  if(life&&!quiet&&next.generation===life.generation&&!next.paused&&['PRESENT','STUDYING','COMPUTER'].includes(state.state)){
+   if(next.phase==='WEAK'&&life.phase!=='WEAK')chirp('weak');
+   else if(next.phase==='TIRED'&&next.reminders>life.reminders)chirp('remind');
   }
-  life = next; lifeAt = Date.now();
-  suppressSound = false;
-  renderLife();
+  current=state;life=next;lastSnapshotAt=Date.now();lastSequence=seq;suppressSound=false;
+ }
+ if(nextCare)receiveCare(nextCare,quiet);
+ if(!quiet)for(const line of lines){const f=line.split(',');if(f[0]!=='EVENT'||f.length!==4||!integers(f.slice(1,3))||eventIds.has(f[2]))continue;eventIds.add(f[2]);if(eventIds.size>300)eventIds.delete(eventIds.values().next().value);const label={WELCOME:'你回到桌前，啾啾也準備好了。',LEAVE:'一起離開桌前，伸個懶腰。',REMIND:'學習告一段落，帶啾啾休息一下吧。',WEAK:'啾啾有點累了，這次真的要休息囉。',DIED:'啾啾累得離開了。完整休息後，再迎接新的生命。',RESTED:'好好休息過，重新充滿活力。',REBORN:'一顆新的蛋，等你一起慢慢養大。'}[f[3]];if(label)remember(label);}
+ eventCursor=Number(net[2]);lastBoardMs=board;render();
 }
-
-function handlePetEvent(f) {
-  if (f.length !== 4 || !EVENT_NAMES[f[3]]) return;
-  const ms = Number(f[1]), id = Number(f[2]);
-  if (!Number.isSafeInteger(ms) || ms < 0 || !Number.isSafeInteger(id) || id < 1) return;
-  if (ms < lastEventMs) { eventSegment++; eventKeys.clear(); }
-  lastEventMs = ms;
-  const key = `${eventSegment}:${id}`;
-  if (eventKeys.has(key)) return;
-  eventKeys.add(key);
-  petEvents.push({ key, at: Date.now(), ms, id, code: f[3] });
-  while (petEvents.length > 300) eventKeys.delete(petEvents.shift().key);
-  if (f[3] === 'WELCOME' || f[3] === 'REBORN') welcomeUntil = Date.now() + 2000;
-  if (f[3] === 'CLAP' && networkEnabled && !suppressSound && !replayingEvents &&
-      lastBoardMs >= ms && lastBoardMs - ms <= 2000 && Date.now() >= clapQuietUntil &&
-      life && life.started && !life.paused && life.phase !== 'DEAD' && Date.now() - lifeAt <= 3000 &&
-      ['PRESENT', 'STUDYING', 'COMPUTER'].includes(current.state)) {
-    welcomeUntil = Date.now() + 2000;
-    clapQuietUntil = Date.now() + 5000;
-    if (life) renderLife();
+function pollNetwork(){
+ if(!networkEnabled)return Promise.resolve();if(networkTask)return networkTask;
+ const token=epoch;networkTask=(async()=>{const controller=new AbortController();networkAbort=controller;const timeout=setTimeout(()=>controller.abort(),2200);try{const res=await fetch('/api/poll?after='+eventCursor,{method:'POST',headers:{'X-StudyBuddy':'1'},cache:'no-store',signal:controller.signal});if(!res.ok)throw Error('Unavailable home');const body=await res.text();if(token===epoch&&networkEnabled)applySnapshot(body);}catch{if(token===epoch&&networkEnabled){suppressSound=true;if(life)life.paused=true;render();}}finally{clearTimeout(timeout);if(networkAbort===controller)networkAbort=null;}})().finally(()=>{networkTask=null;});return networkTask;
+}
+async function connect(){
+ if(location.protocol!=='http:'&&location.protocol!=='https:'){$('addressBox').hidden=false;$('settings').showModal();return;}
+ if(networkEnabled)return;await enableAudio();networkEnabled=true;++epoch;lastSequence=-1;lastBoardMs=-1;eventCursor=-1;suppressSound=true;life=null;care=null;eatUntil=0;render();await pollNetwork();
+}
+async function disconnect(){networkEnabled=false;++epoch;networkAbort?.abort();feedAbort?.abort();suppressSound=true;eatUntil=0;feedBusy=false;if(life)life.paused=true;render();await networkTask;}
+async function feed(){
+ // 只送一次；沒收到回覆就查存量，不再扣一次。
+ if(feedBusy||Date.now()<eatUntil||!fresh()||!care?.available||!care.food||!life.started||life.phase==='DEAD'||care.generation!==life.generation)return;
+ feedBusy=true;const token=epoch,boot=care.boot,revision=care.revision,controller=new AbortController();feedAbort=controller;const timeout=setTimeout(()=>controller.abort(),2500);render();
+ try{const res=await fetch(`/api/feed?boot=${boot}&revision=${revision}`,{method:'POST',headers:{'X-StudyBuddy':'1'},cache:'no-store',signal:controller.signal});const next=parseCare(await res.text());if(token!==epoch||!networkEnabled)return;if(!next||next.boot!==boot||(!res.ok&&res.status!==409))throw Error('Unconfirmed feed');receiveCare(next);if(!res.ok)toast('啾啾先緩一下，等小屋更新後再餵。');}
+ catch{if(token===epoch&&networkEnabled)toast('正在確認餵食結果，先別急著再按。');}
+ finally{clearTimeout(timeout);if(feedAbort===controller)feedAbort=null;if(token===epoch){feedBusy=false;render();await pollNetwork();}}
+}
+function growth(){if(!life?.started||life.phase==='DEAD')return 0;const score=(care?.generation===life.generation?care.feeds:0)+life.cycles*2;return score>=16?4:score>=8?3:score>=3?2:1;}
+function render(){
+ const online=fresh(),alive=life?.started&&life.phase!=='DEAD',sleeping=current.state==='AWAY';
+ $('connectionDot').classList.toggle('online',!!online);$('connectionLabel').textContent=online?'正在陪伴':networkEnabled?'等待小屋回應':'等你回家';$('connectButton').disabled=networkEnabled;$('connectLabel').textContent=networkEnabled?'陪伴已開始':'開始陪伴';$('disconnectButton').disabled=!networkEnabled;$('settingsConnection').textContent=online?'小屋已連上':networkEnabled?'正在找小屋':'還沒開始陪伴';
+ $('activityLabel').textContent=!networkEnabled?'準備迎接新的一天':!online?'暫停一下，等你回來':STATES[current.state];
+ $('energyLabel').textContent=life?`${life.energy}%`:'等待陪伴';$('energyFill').style.width=(life?.energy||0)+'%';
+ $('roomCaption').textContent=!networkEnabled?'小屋已經準備好了，等你一起開始。':!online?'暫時看不清楚，先停下來等你。':life.phase==='DEAD'?'啾啾的這段旅程結束了。完整休息後，會迎來新的蛋。':sleeping?'你去休息，啾啾也在床邊打個盹。':life.phase==='WEAK'?'啾啾快沒力氣了，離開桌前休息一下吧。':life.phase==='TIRED'?'休息時間到了，啾啾想和你一起伸個懶腰。':Date.now()<eatUntil?'啾啾正在吃穀穀，謝謝你的照顧。':current.noisy?'周圍有點熱鬧，幫啾啾找回安靜的小角落吧。':'小雞會在屋裡散步，點一下牠，打個招呼吧。';
+ const resting=online&&sleeping&&life.work>0,elapsed=life?(resting?life.rest:life.work):0,goal=life?(resting?life.restGoal:life.remindGoal):1500;
+ $('sessionTime').textContent=fmt(elapsed);$('sessionHint').textContent=!networkEnabled?'坐好，翻開書，慢慢開始。':!online?'陪伴已暫停，不會累積時間。':resting?'正在休息，讓活力慢慢回來。':'這一輪已在桌前陪伴的時間。';$('sessionFill').style.width=Math.min(100,elapsed/goal*100)+'%';$('sessionFoot').textContent=resting?`再休息 ${fmt(Math.max(0,goal-elapsed))}`:elapsed>=goal?'這一輪完成了，該起身休息囉。':`再陪伴 ${fmt(goal-elapsed)}，就休息一下`;
+ $('foodCount').textContent=care?.food??0;$('rewardHint').textContent=care?`再學習 ${fmt(care.next)}，收穫下一份。`:'每認真學習 5 分鐘，收穫 1 份。';
+ $('feedButton').disabled=feedBusy||Date.now()<eatUntil||!online||!care?.available||!care.food||!alive||care.generation!==life.generation;
+ $('feedLabel').textContent=feedBusy?'穀穀送出中…':Date.now()<eatUntil?'正在享用…':'餵啾啾吃穀穀';$('feedHint').textContent=!networkEnabled?'開始陪伴後，就能一起收集。':!online?'等小屋回應後，再送上穀穀。':!care?'糧倉還沒準備好，稍後再來看看。':!alive?'等小雞醒來，再一起吃穀穀。':!care.available?'等你回到桌前，就可以餵食。':!care.food?'讀書或電腦學習，收集第一份穀穀。':'每次餵食使用 1 份，成長 +1。';
+ const nextStage=growth();if(nextStage!==stage){const grew=stage>0&&nextStage>stage;stage=nextStage;$('petArt').innerHTML=chick(stage);$('avatar').innerHTML=chick(stage);$('growthStages').innerHTML=GROWTH.map((s,i)=>`<div class="stage ${i<=stage?'reached':''} ${i===stage?'current':''}"><div class="stageart">${chick(i)}</div><span>${s[0]}</span></div>`).join('');if(grew&&online){celebrateUntil=Date.now()+2200;remember('啾啾長成了'+GROWTH[stage][0]+'。');}}
+ $('petIdentity').textContent=life?`${GROWTH[stage][0]} · 第 ${life.generation} 代`:'一顆小小的期待';const score=(care?.generation===life?.generation?(care?.feeds||0):0)+(life?.cycles||0)*2;
+ $('growthHint').textContent=stage===0?'從小小的蛋開始，陪牠慢慢長大。':stage===4?'小屋守護者，繼續收集你們的日常。':`還差 ${Math.max(0,GROWTH[stage+1][1]-score)} 點成長，成為${GROWTH[stage+1][0]}。`;$('demoNote').hidden=!life?.demo;
+ $('restHint').textContent=life?`陪伴 ${fmt(life.remindGoal)} 後輕叫一次；再久坐一會兒會再提醒。離開桌前休息 ${fmt(life.restGoal)}，讓活力回來。`:'時間到了，啾啾會輕輕叫你。離開桌前走一走，回來再一起努力。';
+ $('toast').classList.toggle('visible',Date.now()<toastUntil);
+}
+function pose(name,bubble){if(petPose!==name){petPose=name;$('wanderer').dataset.pose=name;}if(bubbleName!==bubble){bubbleName=bubble;$('petBubble').innerHTML=icon(bubble);}}
+function roomPoint(x,y){const r=$('room').getBoundingClientRect(),h=$('home').getBoundingClientRect(),w=$('wanderer').offsetWidth;return {x:r.left-h.left+r.width*x-w/2,y:r.top-h.top+r.height*y-$('wanderer').offsetHeight+10};}
+function target(p){motion.tx=p.x;motion.ty=p.y;}
+function frame(ts){
+ const dt=Math.min((ts-motion.last)/1000||0,.05);motion.last=ts;const now=Date.now(),online=fresh(),dead=life?.phase==='DEAD',sleep=online&&current.state==='AWAY';
+ if(!motion.ready){const p=roomPoint(.49,.86);motion.x=p.x;motion.y=p.y;target(p);motion.ready=true;motion.next=0;}
+ let state='idle',bubble='heart',canWalk=online&&life.started&&!dead&&!sleep&&!reduced.matches;
+ if(!life?.started){state='egg';bubble='spark';}
+ else if(dead){state='dead';bubble='moon';}
+ else if(!online){state='idle';bubble='pause';}
+ else if(sleep){state='sleep';bubble='sleep';const p=roomPoint(.82,.73);motion.x=p.x;motion.y=p.y;target(p);}
+ else if(Date.now()<eatUntil){target(roomPoint(.71,.88));state='eat';bubble='seed';}
+ else if(now<celebrateUntil){state='hop';bubble='heart';canWalk=false;}
+ else if(life.phase==='WEAK'||life.phase==='TIRED'){state='tired';bubble='moon';}
+ else if(current.state==='STUDYING'||current.state==='COMPUTER'){state='read';bubble='book';}
+ if(canWalk){
+  if(now>=motion.next&&now>=eatUntil){
+   if(Math.random()<.24){const r=$('walkway').getBoundingClientRect(),h=$('home').getBoundingClientRect();target({x:r.left-h.left+r.width*(.18+Math.random()*.64)-$('wanderer').offsetWidth/2,y:r.top-h.top+r.height-$('wanderer').offsetHeight});}
+   else target(roomPoint(.35+Math.random()*.29,.79+Math.random()*.15));motion.next=now+6500+Math.random()*5500;
   }
-  $('petEvents').textContent = petEvents.slice(-30).map(e => `${new Date(e.at).toLocaleTimeString()}　${EVENT_NAMES[e.code]}`).join('\n');
-  $('petEvents').scrollTop = $('petEvents').scrollHeight;
+  const dx=motion.tx-motion.x,dy=motion.ty-motion.y,distance=Math.hypot(dx,dy),speed=now<eatUntil?150:state==='tired'?18:38;
+  if(distance>2){const travel=Math.min(distance,dt*speed);motion.x+=dx/distance*travel;motion.y+=dy/distance*travel;if(Math.abs(dx)>1)motion.facing=dx<0?-1:1;state='walk';}
+ }
+ if(reduced.matches&&now<eatUntil){const p=roomPoint(.71,.88);motion.x=p.x;motion.y=p.y;}
+ motion.x=Math.max(4,Math.min(motion.x,$('home').clientWidth-$('wanderer').offsetWidth-4));motion.y=Math.max(140,Math.min(motion.y,$('home').clientHeight-$('wanderer').offsetHeight-40));
+ $('wanderer').style.transform=`translate(${Math.round(motion.x)}px,${Math.round(motion.y)}px)`;$('petArt').style.setProperty('--facing',motion.facing);pose(state,bubble);requestAnimationFrame(frame);
 }
-$('btnEvents').onclick = () => {
-  const csv = 'received_ms,board_ms,event_id,event\r\n' + petEvents.map(e => `${e.at},${e.ms},${e.id},${e.code}`).join('\r\n');
-  const url = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }));
-  const a = document.createElement('a'); a.href = url; a.download = 'chick-events.csv'; a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-};
+$('connectButton').onclick=connect;$('feedButton').onclick=feed;$('disconnectButton').onclick=disconnect;
+$('petButton').onclick=()=>{if(fresh()&&life.started&&life.phase!=='DEAD'&&current.state!=='AWAY'){celebrateUntil=Date.now()+1800;toast('啾啾收到你的摸摸了。');}else toast('啾啾在等你，一起好好學習，也好好休息。');};
+$('settingsButton').onclick=()=>{$('addressBox').hidden=!['file:',''].includes(location.protocol);$('settings').showModal();};$('closeSettings').onclick=()=>$('settings').close();
+$('soundButton').onclick=async()=>{soundEnabled=!soundEnabled;$('soundButton').textContent=soundEnabled?'已開啟':'已關閉';$('soundButton').setAttribute('aria-pressed',String(soundEnabled));if(soundEnabled)await enableAudio();};
+$('openHome').onclick=()=>{try{const value=$('homeAddress').value.trim(),url=new URL(value.includes('://')?value:'http://'+value);if(url.protocol!=='http:'||!url.hostname||url.username||url.password||url.search||url.hash||url.pathname!=='/')throw Error();location.assign(url.href);}catch{toast('請輸入小屋的 Wi-Fi 位址，例如 192.168.1.88。');}};
+window.addEventListener('resize',()=>{motion.ready=false;});document.addEventListener('visibilitychange',()=>{motion.last=0;if(!document.hidden&&networkEnabled){suppressSound=true;pollNetwork();}});
+setInterval(()=>{if(networkEnabled)pollNetwork();render();},1000);render();requestAnimationFrame(frame);
 
-let lastCsv = null, lastCsvAt = 0, lastStateAt = 0;
-const csvHistory = [];
-// 看看物品是太小、太低分，還是放錯位置
-function renderPlacement(f, record = true) {
-  if (record) {
-    lastCsv = f;
-    lastCsvAt = Date.now();
-    csvHistory.push({ at: lastCsvAt, fields: [...f] });
-    while (csvHistory.length && (csvHistory.length > 1800 || lastCsvAt - csvHistory[0].at > 1800000)) csvHistory.shift();
-  }
-  const n = i => parseInt(f[i], 10) || 0;
-  const samples = n(2), modern = f.length >= 24, related = f.length >= 36;
-  const chip = (id, label, hits, max, count, stable) => {
-    const el = $(id), ratio = count ? hits / count : 0;
-    el.textContent = `${label} ${count ? `${max} 分 · ${Math.round(ratio * 100)}%` : '無新結果'}${stable ? ' · 持續出現' : ''}`;
-    el.className = "chip" + (ratio >= 0.6 ? " on" : hits ? " weak" : "");
-  };
-  chip("chipPerson", "人", n(3), n(4), samples, false);
-  chip("chipBook", "書", n(5), n(6), samples, modern && n(17));
-  chip("chipPhone", "手機", n(7), n(8), samples, modern && n(18));
-  chip("chipLaptop", "筆電", n(9), n(10), samples, modern && n(19));
-  chip("chipTable", "桌子", n(24), n(25), related ? samples : 0, false);
-  chip("chipKeyboard", "鍵盤", n(26), n(27), related ? samples : 0, false);
-  chip("chipMouse", "滑鼠", n(28), n(29), related ? samples : 0, false);
-  chip("chipRemote", "遙控器", n(30), n(31), related ? samples : 0, false);
-  $("relationInfo").textContent = related
-    ? `本區間關聯補足：書 ${n(32)} 次、手機 ${n(33)} 次；鍵盤＋滑鼠電腦線索：${n(35) ? '持續成立' : '未成立'}。補足仍需原本有書／手機候選。`
-    : '目前韌體沒有關聯欄位，請燒錄新版後使用自動關聯判斷。';
-  const person = samples ? n(3) / samples : 0;
-  const target = $("checkTarget").value;
-  let hint;
-  if (modern && (n(15) < 0 || n(15) > 2000)) hint = "物件辨識資料尚未到達或已逾時，請檢查開發板；這不代表物品已移走。";
-  else if (!samples) hint = "這個區間沒有新物件推論結果，請先確認推論更新率。";
-  else if (target !== "person") {
-    const isBook = target === "book", label = isBook ? "書本" : "手機";
-    const hits = n(isBook ? 5 : 7), max = n(isBook ? 6 : 8);
-    const threshold = modern ? n(isBook ? 21 : 22) : 30;
-    if (!max) hint = `未回傳${label}候選：確認完整露出並靠近鏡頭，再調整角度與反光；沒有候選時，其他類別無法補出${label}。`;
-    else if (!hits) hint = max < threshold
-      ? `${label}有候選（${max} 分），但未達 ${threshold} 分一般門檻${related ? '，也未通過位置、關聯或衝突檢查' : ''}。先改善大小、角度與光線。`
-      : `${label}有候選但未通過範圍檢查${related ? '，或與更強的其他類別重疊' : ''}；書放青色框，手機放框內或人附近。`;
-    else hint = `${label}本區間命中 ${hits}/${samples} 次。固定不動觀察 30 秒，再移走觀察是否誤判；持續出現狀態容許最多約 3 秒漏判。`;
-  }
-  else if (person < 0.3) hint = "幾乎看不到人：讓肩膀與上半身完整入鏡，確認光線與鏡頭位置。";
-  else if (person < 0.8) hint = "人時有時無：鏡頭靠近一點、固定好，避免背對窗戶（逆光）。";
-  else hint = "人的取景穩定。請再切換到「書本」或「手機」分別校正桌面，不必刻意看鏡頭。";
-  $("placeHint").textContent = hint;
-  const seconds = modern ? Math.max(1, n(20)) / 1000 : 1;
-  $("inferenceInfo").textContent = modern
-    ? `新推論：物件 ${(samples / seconds).toFixed(1)} 次/秒 · 物件資料距今 ${n(15) < 0 ? '尚無資料' : n(15) + ' ms'}`
-    : '舊版韌體：取樣可能重複，請燒錄新版後比較推論命中率。';
-  const recent = csvHistory.filter(row => lastCsvAt - row.at < 30000 && row.fields.length >= 24);
-  const total = recent.reduce((sum, row) => sum + Number(row.fields[2]), 0);
-  const ratio = i => total ? Math.round(recent.reduce((sum, row) => sum + Number(row.fields[i]), 0) / total * 100) + '%' : '—';
-  $("recentInfo").textContent = `最近 30 秒（${recent.length} 筆，${total} 次新推論）：書 ${ratio(5)}、手機 ${ratio(7)}、人 ${ratio(3)}。這是命中比例，需配合物品實際是否在場解讀。`;
-}
-
-$("checkTarget").onchange = () => { if (lastCsv) renderPlacement(lastCsv, false); };
-// 把這次測試存成 CSV
-$("btnExport").onclick = () => {
-  if (!csvHistory.length) { $("recentInfo").textContent = '目前沒有辨識紀錄可匯出。'; return; }
-  const header = 'kind,t_s,samples,person_hits,person_max,book_hits,book_max,phone_hits,phone_max,laptop_hits,laptop_max,face_hits,face_max,face_pitch,face_samples,object_age_ms,face_age_ms,book_stable,phone_stable,laptop_stable,interval_ms,book_threshold,phone_threshold,laptop_threshold,table_hits,table_max,keyboard_hits,keyboard_max,mouse_hits,mouse_max,remote_hits,remote_max,book_assist_hits,phone_assist_hits,phone_near_person,computer_context';
-  const csv = header + '\r\n' + csvHistory.map(row => [...row.fields.slice(0, 36), ...Array(Math.max(0, 36 - row.fields.length)).fill('')].join(',')).join('\r\n');
-  const url = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }));
-  const a = document.createElement('a'); a.href = url; a.download = 'study-buddy-' + Date.now() + '.csv'; a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-};
-
-// 太久沒資料就別當成即時結果
-setInterval(() => {
-  pollNetwork();
-  if (life) renderLife();
-  if (lastCsvAt && Date.now() - lastCsvAt > 3000) {
-    $("placeHint").textContent = '超過 3 秒未收到新的 CSV，以上分數是舊資料，請確認 Wi-Fi 連線。';
-    $("inferenceInfo").textContent = '資料已停止更新';
-    $("relationInfo").textContent = '關聯資料已逾時';
-    ['chipPerson', 'chipBook', 'chipPhone', 'chipLaptop', 'chipTable', 'chipKeyboard', 'chipMouse', 'chipRemote'].forEach(id => { $(id).className = 'chip'; });
-  }
-  if (lastStateAt && Date.now() - lastStateAt > 3000) {
-    $("stateText").textContent = '狀態資料已逾時';
-    $("msg").textContent = '等待新的開發板狀態，累計時間保留最後一次回報。';
-    $("phoneNotice").textContent = ''; $("micNotice").textContent = ''; $("badge").textContent = '❓'; $("pet").className = 'pet';
-  }
-}, 1000);
-
-function log(line) {
-  const el = $("log");
-  el.textContent += line + "\n";
-  if (el.textContent.length > 20000) el.textContent = el.textContent.slice(-15000);
-  el.scrollTop = el.scrollHeight;
-}
-
-
-// 一行一行讀板子送來的資料
-function handleLine(line) {
-  line = line.trim();
-  if (!line) return;
-  log(line);
-  const f = line.split(",");
-  if (f[1] === "t_s") return;
-  if (f[0] === 'PET') { handleLife(f); return; }
-  if (f[0] === 'EVENT') { handlePetEvent(f); return; }
-  if (f[0] === "CSV" && f.length >= 11) { renderPlacement(f); return; }
-  if (f[0] !== "STATE" || f.length < 9) return;
-  if (!STATES[f[2]]) return;
-  lastStateAt = Date.now();
-  const n = i => parseInt(f[i], 10) || 0;
-  if (f[6] !== 'A') {
-    current = { ...blank(), state: 'UNSURE', deskS: current.deskS, studyS: current.studyS,
-      computerS: current.computerS, awayCount: current.awayCount, lastAwayS: current.lastAwayS };
-    render();
-    $("modeText").textContent = '舊韌體回報非自動狀態，請燒錄新版；本頁不採用這筆活動判斷。';
-    return;
-  }
-  const hasMic = f.length >= 17 && Number(f[14]) >= 0;
-  current = { state: f[2], deskS: n(3), studyS: n(4), computerS: n(5),
-              awayCount: n(7), lastAwayS: n(8), phone: f[12] === "1", phoneNear: f[13] === "1",
-              mic: hasMic ? n(14) : -1, micPeak: hasMic ? n(15) : -1, noisy: hasMic && f[16] === "1" };
-  $("modeText").textContent = f.length >= 14 ? '自動判斷：物件＋位置關聯' : '舊韌體自動判斷：尚無位置關聯，請燒錄新版';
-  render();
-}
-
-// 本機 HTML 只帶你到板子頁面，資料保持同來源
-function openBoard() {
-  try {
-    const raw = $('boardAddress').value.trim();
-    if (!raw) throw new Error('請先填入 Ameba 的 IP');
-    const url = new URL(raw.includes('://') ? raw : 'http://' + raw);
-    if (url.protocol !== 'http:' || url.username || url.password || url.search || url.hash || url.pathname !== '/')
-      throw new Error('請填 http://板子IP/，不要加入其他路徑');
-    location.assign(url.origin + '/');
-  } catch (e) { $('conn').textContent = '網址無法開啟：' + e.message; }
-}
-$('btnOpenBoard').onclick = openBoard;
-if (location.protocol === 'http:') $('boardAddress').value = location.host;
-
-// 每秒取一次快照，這個請求同時是心跳
-async function pollNetwork() {
-  if (!networkEnabled || networkTask) return;
-  const epoch = networkEpoch;
-  const controller = new AbortController();
-  networkAbort = controller;
-  const timeout = setTimeout(() => controller.abort(), 2000);
-  const task = (async () => {
-    try {
-      const response = await fetch('/api/poll?after=' + eventCursor, {
-        method: 'POST', headers: { 'X-StudyBuddy': '1' }, cache: 'no-store', signal: controller.signal
-      });
-      if (!response.ok) throw new Error('HTTP ' + response.status);
-      const body = await response.text();
-      if (!networkEnabled || epoch !== networkEpoch) return;
-      const lines = body.trim().split(/\r?\n/), meta = lines.shift().split(',');
-      const [seq, cursor, ms] = meta.slice(1).map(Number);
-      if (meta[0] !== 'NET' || meta.length !== 4 || [seq, cursor, ms].some(n => !Number.isSafeInteger(n) || n < 0))
-        throw new Error('不是新版 Ameba 的資料');
-      const reboot = lastBoardMs >= 0 && (ms < lastBoardMs || seq < lastSequence);
-      if (reboot) {
-        life = null; suppressSound = true; lastSequence = -1;
-        csvHistory.length = 0; eventSegment++; eventKeys.clear(); lastEventMs = -1;
-      }
-      const fresh = seq !== lastSequence;
-      if (seq > 0 && fresh && !['CSV,', 'STATE,', 'PET,'].every(prefix => lines.some(line => line.startsWith(prefix))))
-        throw new Error('資料尚未完整');
-      replayingEvents = suppressSound;
-      lastBoardMs = ms;
-      for (const line of lines) {
-        if (line.startsWith('EVENT,')) handleLine(line);
-        else if (line === 'NOTICE,EVENT_GAP') log('部分舊事件已超出板端暫存，這次只補最近事件。');
-        else if (seq > 0 && fresh) handleLine(line);
-      }
-      lastSequence = seq; lastBoardMs = ms; eventCursor = cursor;
-      replayingEvents = false;
-      $('conn').textContent = seq ? 'Wi-Fi 已連線 · ' + location.host : 'Wi-Fi 已連線，等待板端辨識啟動';
-    } catch (e) {
-      if (networkEnabled && epoch === networkEpoch) {
-        suppressSound = true;
-        $('conn').textContent = 'Wi-Fi 連線中斷，正在重試；請確認電源、網路與 IP。';
-        if (life) { life.paused = true; renderLife(); }
-      }
-    } finally {
-      clearTimeout(timeout);
-      if (networkAbort === controller) networkAbort = null;
-    }
-  })();
-  networkTask = task;
-  try { await task; } finally { if (networkTask === task) networkTask = null; }
-}
-
-async function connect() {
-  if (networkEnabled || networkTask) return;
-  if (location.protocol !== 'http:') {
-    $('conn').textContent = '請填入 IP 並按「開啟板子網頁」，再開始連線。';
-    return;
-  }
-  enableAudio();
-  networkEnabled = true; networkEpoch++;
-  lastSequence = lastBoardMs = eventCursor = -1; suppressSound = true;
-  $('btnConnect').disabled = true;
-  csvHistory.length = 0; lastCsv = null; lastCsvAt = lastStateAt = 0;
-  life = null; lifeAt = 0; welcomeUntil = 0; eventSegment++; lastEventMs = -1; eventKeys.clear();
-  $('petLifeText').textContent = '等待 Ameba 的 Wi-Fi 養成資料';
-  ['petEnergy', 'petWork', 'petRest', 'petCycles'].forEach(id => { $(id).textContent = '—'; });
-  ['chipPerson', 'chipBook', 'chipPhone', 'chipLaptop', 'chipTable', 'chipKeyboard', 'chipMouse', 'chipRemote'].forEach(id => { $(id).textContent = '等待新資料'; $(id).className = 'chip'; });
-  $('placeHint').textContent = '等待新的擺放檢查資料';
-  $('inferenceInfo').textContent = '等待推論資料';
-  $('recentInfo').textContent = '最近 30 秒：等待資料';
-  $('relationInfo').textContent = '等待關聯判斷資料';
-  $('modeText').textContent = '等待自動辨識資料';
-  $('stateText').textContent = '等待新的開發板狀態';
-  $('phoneNotice').textContent = ''; $('micNotice').textContent = '';
-  $('conn').textContent = '正在連接 Ameba…';
-  await pollNetwork();
-}
-
-async function disconnect() {
-  networkEnabled = false; networkEpoch++;
-  if (networkAbort) networkAbort.abort();
-  if (networkTask) await networkTask;
-  if (life) { life.paused = true; renderLife(); }
-  $('btnConnect').disabled = false;
-  $('conn').textContent = 'Wi-Fi 已中斷，養成將在心跳逾時後暫停';
-}
-
-$("btnConnect").onclick = connect;
-$("btnDisconnect").onclick = disconnect;
-
-render();
 </script>
-</body>
-</html>
+</body></html>
 )PETPAGE";

@@ -1,6 +1,7 @@
 #pragma once
 #include "WiFi.h"
 #include "PetWebPage.h"
+#include "PetCare.h"
 extern "C" {
 #include "FreeRTOS.h"
 #include "semphr.h"
@@ -9,8 +10,10 @@ extern "C" {
 // 網路另外跑，不讓慢速瀏覽器卡住辨識
 class PetNetwork {
 public:
-    bool begin(const char *ssid, const char *pass) {
+    bool begin(const char *ssid, const char *pass, unsigned long rewardMs) {
         networkName = ssid; networkPassword = pass;
+        care.goalMs = rewardMs;
+        bootTag = micros();
         lock = xSemaphoreCreateMutex();
         if (!lock) return false;
         return xTaskCreate(run, "PetWeb", 8192, this, 1, NULL) == pdPASS;
@@ -38,6 +41,13 @@ public:
         xSemaphoreGive(lock);
         return active;
     }
+    bool updateCare(unsigned long now, bool learning, bool available, unsigned generation) {
+        if (!lock) return false;
+        xSemaphoreTake(lock, portMAX_DELAY);
+        const bool reward = care.tick(now, learning, available, generation);
+        xSemaphoreGive(lock);
+        return reward;
+    }
 
 private:
     enum { EVENT_COUNT = 32 };
@@ -47,9 +57,22 @@ private:
     char events[EVENT_COUNT][80] = {};
     unsigned long sequence = 0, eventId = 0, heartbeat = 0;
     bool seen = false;
+    PetCare care{300000};
+    unsigned long bootTag = 0;
     const char *networkName = NULL, *networkPassword = NULL;
 
     static void run(void *arg) { static_cast<PetNetwork *>(arg)->serve(); }
+
+    // 呼叫時已拿到鎖
+    String careLine() {
+        char line[180];
+        snprintf(line, sizeof(line), "CARE,%lu,%lu,%lu,%u,%lu,%lu,%lu,%lu,%lu,%d\n",
+            bootTag, (unsigned long)care.revision, (unsigned long)care.generation, care.food,
+            (unsigned long)care.feeds, (unsigned long)(care.learnedMs / 1000),
+            (unsigned long)((care.goalMs - care.progressMs + 999) / 1000),
+            (unsigned long)(care.goalMs / 1000), (unsigned long)care.lastFeedMs, care.canFeed);
+        return String(line);
+    }
 
     // 分段送，記得處理沒送完的部分
     bool writeAll(WiFiClient &client, const char *data, size_t length) {
@@ -82,6 +105,7 @@ private:
         if (sequence) {
             body += csv; body += '\n'; body += state; body += '\n'; body += pet; body += '\n';
         }
+        body += careLine();
         // 第一次只同步現況，重試才補齊短暫漏收的事件
         if (after >= 0 && (unsigned long)after <= eventId) {
             unsigned long first = (unsigned long)after + 1;
@@ -135,6 +159,23 @@ private:
             }
             const String body = snapshot(after);
             reply(client, "200 OK", "text/plain; charset=utf-8", body.c_str(), body.length());
+        } else if (strcmp(method, "POST") == 0 && strncmp(path, "/api/feed?boot=", 15) == 0 && appRequest) {
+            char *end;
+            const unsigned long boot = strtoul(path + 15, &end, 10);
+            if (end == path + 15 || strncmp(end, "&revision=", 10) != 0) {
+                reply(client, "400 Bad Request", "text/plain", "Invalid request", 15); return;
+            }
+            const char *number = end + 10;
+            const unsigned long expected = strtoul(number, &end, 10);
+            if (*end || end == number) {
+                reply(client, "400 Bad Request", "text/plain", "Invalid request", 15); return;
+            }
+            xSemaphoreTake(lock, portMAX_DELAY);
+            const unsigned long now = millis();
+            const bool accepted = boot == bootTag && seen && now - heartbeat <= 3000 && care.feed(expected, now);
+            const String body = careLine();
+            xSemaphoreGive(lock);
+            reply(client, accepted ? "200 OK" : "409 Conflict", "text/plain; charset=utf-8", body.c_str(), body.length());
         } else {
             reply(client, "404 Not Found", "text/plain", "Not found", 9);
         }

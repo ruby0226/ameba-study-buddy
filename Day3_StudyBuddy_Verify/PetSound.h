@@ -10,20 +10,13 @@ extern "C" {
 #ifndef MIC_NOISE_LEVEL
 #define MIC_NOISE_LEVEL 3000
 #endif
-#ifndef MIC_CLAP_LEVEL
-#define MIC_CLAP_LEVEL 8000
-#endif
 #define MIC_SAMPLE_MS    20
-#define CLAP_GAP_MIN_MS  150
-#define CLAP_GAP_MAX_MS  900
-#define CLAP_COOLDOWN_MS 1500
 
 // 只用板上麥克風聽，叫聲仍交給電腦播放
 class PetSound {
 public:
     volatile int level = 0, peak = 0;    // 上一秒平均與最高
     volatile bool noisy = false;
-    volatile unsigned long claps = 0;     // 連拍兩下的次數
 
     bool begin() {
         audio.configAudio(setting);
@@ -42,32 +35,16 @@ private:
     static void run(void *arg) { static_cast<PetSound *>(arg)->listen(); }
 
     void listen() {
-        unsigned long secondStart = millis(), lastOnset = 0, quietUntil = 0;
+        unsigned long secondStart = millis();
         long sum = 0;
         int count = 0, secPeak = 0;
         unsigned history = 0;    // 最近 5 秒哪幾秒偏吵
-        bool high = false;
         while (true) {
             const unsigned long now = millis();
             int v = audio.micLevel();
             if (v < 0) v = -v;
             sum += v; ++count;
             if (v > secPeak) secPeak = v;
-
-            // 拍手是很短的尖峰，要先降下來才算下一下
-            if (!high && v >= MIC_CLAP_LEVEL && !noisy && now >= quietUntil) {
-                high = true;
-                if (lastOnset && now - lastOnset >= CLAP_GAP_MIN_MS && now - lastOnset <= CLAP_GAP_MAX_MS) {
-                    ++claps;
-                    lastOnset = 0;
-                    quietUntil = now + CLAP_COOLDOWN_MS;
-                } else {
-                    lastOnset = now;
-                }
-            } else if (high && v < MIC_CLAP_LEVEL / 2) {
-                high = false;
-            }
-            if (lastOnset && now - lastOnset > CLAP_GAP_MAX_MS) lastOnset = 0;
 
             // 持續吵才算，偶爾一聲不算
             if (now - secondStart >= 1000) {

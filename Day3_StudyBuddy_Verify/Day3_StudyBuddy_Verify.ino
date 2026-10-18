@@ -38,10 +38,9 @@ PetLife::Clock petLife(25UL * 60000, 5UL * 60000, 10UL * 60000);
 PetNetwork petNetwork;
 unsigned long petEventId = 0;
 
-// 麥克風聽拍手和環境音量
+// 麥克風只看環境音量
 PetSound petSound;
 bool soundReady = false, lastNoisy = false;
-unsigned long lastClaps = 0;
 
 // 分數不夠就先不算
 #define NN_CONF_THRESH   0.25f
@@ -393,7 +392,7 @@ void setup()
     if (!soundReady) Serial.println("ERROR,microphone start failed");
 
     printRtspUrl();
-    if (!petNetwork.begin(ssid, pass)) Serial.println("ERROR,web server task failed");
+    if (!petNetwork.begin(ssid, pass, PET_DEMO ? 15000 : 300000)) Serial.println("ERROR,web server task failed");
     Serial.print("Pet web: http://");
     Serial.print(ip);
     Serial.println("/");
@@ -518,6 +517,9 @@ void loop()
     const PetLife::Presence presence = seatedNow ? PetLife::AT_DESK :
         state == ST_AWAY ? PetLife::AWAY : PetLife::UNKNOWN;
     const unsigned petEvents = petLife.tick(now, presence, objectFresh && webAlive);
+    const bool learning = (state == ST_STUDYING || state == ST_COMPUTER) && !petLife.paused && !petLife.dead;
+    if (petNetwork.updateCare(now, learning, seatedNow && !petLife.paused && !petLife.dead && petLife.started, petLife.generation))
+        petEvent("REWARD", now);
     const unsigned flags[] = {PetLife::WELCOME, PetLife::LEAVE, PetLife::REMIND,
         PetLife::WEAK, PetLife::DIED, PetLife::RESTED, PetLife::REBORN};
     const char *names[] = {"WELCOME", "LEAVE", "REMIND", "WEAK", "DIED", "RESTED", "REBORN"};
@@ -526,8 +528,6 @@ void loop()
 
     // 麥克風在別的工作跑，這裡只轉成事件
     if (soundReady) {
-        const unsigned long claps = petSound.claps;
-        if (claps != lastClaps) { lastClaps = claps; petEvent("CLAP", now); }
         const bool noisy = petSound.noisy;
         if (noisy != lastNoisy) { lastNoisy = noisy; petEvent(noisy ? "NOISY" : "QUIET", now); }
     }

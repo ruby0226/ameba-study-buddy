@@ -8,9 +8,11 @@ GitHub：[ruby0226/ameba-study-buddy](https://github.com/ruby0226/ameba-study-bu
 
 ## 目前進度
 
-2026-10-16：程式已加入時間一致判斷、物件位置關聯、Wi-Fi 網頁、休息養成、事件紀錄與麥克風互動。網頁自動測試及 AMB82-MINI 編譯已通過。先前 Wi-Fi 韌體曾成功燒錄；本次兩階段叫聲與設定檔整理版本仍需重新燒錄和實機驗收。
+2026-10-18：網頁改為「啾啾的小屋」，加入像素房間、自由走動、學習穀穀獎勵、餵食及五階段成長。獎勵與餵食由 Ameba 記錄；網頁只顯示陪伴資訊，移除分數、校正面板、原始資料及 CSV 匯出。網頁自動測試、桌面／手機瀏覽器測試及 AMB82-MINI 編譯已通過。保留兩階段休息叫聲與環境音量提示，沒有拍手互動。
 
-以下項目尚未完成：系統化的書本／手機辨識率、拍手誤觸率、長時間 Wi-Fi 穩定性及新版操作影片。自動測試使用模擬資料，不代表真實攝影機準確度。
+本次展示版已燒錄成功，實機回傳新版網頁（HTTP 200）及 PET／CARE 資料，確認提醒 60 秒、休息 10 秒、衰減 30 秒、獎勵 15 秒。原始碼預設仍是一般版 `PET_DEMO=0`；展示韌體另以編譯旗標產生。這次確認的是啟動、連線與設定，書本觸發獎勵、餵食、叫聲與休息的完整實機流程仍待錄影與紀錄。
+
+以下項目尚未完成：系統化的書本／手機辨識率、環境噪音提示誤判率、長時間 Wi-Fi 穩定性及新版操作影片。自動測試使用模擬資料，不代表真實攝影機準確度。
 
 ## 硬體與軟體
 
@@ -41,14 +43,18 @@ flowchart TD
     F --> I[板端寵物狀態與事件]
     G --> I
     H --> I
-    J[板上麥克風] --> K[音量門檻與雙拍手候選]
+    J[板上麥克風] --> K[持續音量門檻]
     K --> I
     I --> L[HTTP 快照與事件 API]
-    L --> M[瀏覽器寵物動畫、休息叫聲、CSV]
+    L --> M[像素小屋、休息叫聲、成長與日記]
     M -->|每秒輪詢兼心跳| L
+    M -->|餵食請求| N[Ameba 檢查糧食與狀態]
+    F --> O[有效學習累積穀穀]
+    O --> N
+    N --> L
 ```
 
-Ameba 負責推論、判斷、計時與事件；瀏覽器負責呈現、合成叫聲及匯出。影像不送到雲端辨識。RTSP 與網頁狀態是兩條不同資料路徑；瀏覽器頁面沒有內嵌即時攝影機影片。
+Ameba 負責推論、判斷、計時、事件與糧食存量；瀏覽器負責呈現、合成叫聲與送出餵食。影像不送到雲端辨識。RTSP 與網頁狀態是兩條不同資料路徑；瀏覽器頁面沒有內嵌即時攝影機影片。
 
 ## 相較原始物件偵測範例的延伸
 
@@ -63,9 +69,10 @@ Ameba 負責推論、判斷、計時與事件；瀏覽器負責呈現、合成�
 | 辨識結果帶動反應 | 自動讀書、電腦、在桌前、離席與無法確認狀態 | `.ino`、`web/pet_test.html` |
 | 休息與寵物養成 | 分階段提醒、活力、休息恢復、死亡重生及成長 | `PetLife.h` |
 | Wi-Fi 網頁整合 | 板端提供網頁、輪詢 API、心跳及短期事件補收 | `PetNetwork.h` |
-| 計數與歷史 | 活動秒數、離席次數、寵物事件及 CSV 匯出 | `.ino`、網頁 |
+| 計數與日記 | 板端累積活動與事件，網頁以最近五則小屋日記呈現 | `.ino`、網頁 |
+| 學習獎勵與餵食 | 板端累積穀穀、驗證餵食與防重複扣款，網頁呈現五階段成長 | `PetCare.h`、`PetNetwork.h`、網頁 |
 | 異常處理 | 推論過期、人物不明或心跳中斷時暫停養成 | `.ino`、`PetLife.h` |
-| 麥克風互動 | 雙拍手候選與持續音量事件，網頁跳躍／環境提示 | `PetSound.h` |
+| 麥克風互動 | 持續音量事件與網頁環境提示 | `PetSound.h` |
 
 ## 資料夾
 
@@ -75,7 +82,8 @@ Day3_StudyBuddy_Verify/
   DetectionEvidence.h         跨時間辨識證據
   SceneRelations.h            物件位置與衝突判斷
   PetLife.h                   寵物與休息規則
-  PetSound.h                  麥克風音量與雙拍手候選
+  PetCare.h                   學習獎勵、糧食與餵食規則
+  PetSound.h                  麥克風音量與吵雜判斷
   PetNetwork.h                HTTP 伺服器、心跳、事件暫存
   PetWebPage.h                已打包網頁，直接編譯可用
   WiFiSecrets.example.h       空白 Wi-Fi 設定範本
@@ -86,6 +94,7 @@ README.md                    安裝與使用說明
 第二週_原型操作與測試.md       詳細操作規則
 第二週_改進與繳交檢查.md       測試目標及繳交清單
 第二週_實測紀錄.csv            尚待填入的實測表
+第二週_拍攝與補件指南.md       110 秒拍攝腳本與待提供資料
 ```
 
 `WiFiSecrets.h`、`.build/`、私人影片與作業 Word 留在本機，不上傳。程式倉庫不需要 Word 或影片才能運作。
@@ -140,7 +149,7 @@ arduino-cli upload --fqbn realtek:AmebaPro2:Ameba_AMB82-MINI --port COM3 --input
 
 序列埠監控設為 115200 baud，找到 `Pet web: http://<IP>/`。也可從路由器的裝置清單，或 VLC 畫面上的 `WEB:` 取得 IP。
 
-手機／電腦連到可與板子互通的 Wi-Fi，在瀏覽器開啟 `http://<IP>/`，按「開始 Wi-Fi 連線」。例如板子分到 `192.168.1.100`，就開 `http://192.168.1.100/`；這個 IP 只是範例。
+手機／電腦連到可與板子互通的 Wi-Fi，在瀏覽器開啟 `http://<IP>/`，按「開始陪伴」。例如板子分到 `192.168.1.100`，就開 `http://192.168.1.100/`；這個 IP 只是範例。右上角設定可切換提醒聲音或暫停陪伴。
 
 按下連線會嘗試啟用瀏覽器音效。若靜音或音效被阻擋，文字提醒仍有效。保持網頁在前景；背景分頁節流可能造成心跳逾時。日常使用可將板子改由充電器供電，IP 可能因重新連線而改變。
 
@@ -161,7 +170,7 @@ arduino-cli upload --fqbn realtek:AmebaPro2:Ameba_AMB82-MINI --port COM3 --input
 | 短暫漏判 | 最後命中後最多保留 3 秒；推論超過 2 秒未更新則清除 |
 | 在座／離席 | 穩定在座約 3 秒才成立；約 10 秒確認離席 |
 
-只有書成立為 `STUDYING`；只有電腦線索成立為 `COMPUTER`；兩者都有或都沒有為 `PRESENT`。確認離席為 `AWAY`，資料不足或過期為 `UNSURE`。手機另行顯示「出現／靠近人」，不直接判定使用手機或分心。
+只有書成立為 `STUDYING`；只有電腦線索成立為 `COMPUTER`；兩者都有或都沒有為 `PRESENT`。確認離席為 `AWAY`，資料不足或過期為 `UNSURE`。手機保留在板端資料中，不直接判定使用手機或分心；小屋不顯示辨識分數與原始欄位。
 
 模型使用 person、book、cell phone、laptop、diningtable、keyboard、mouse、remote。紙、筆不是本版獨立辨識類別；沒有手部、抬頭或低頭模型。更完整的關聯規則見 [辨識優化與固定擺放](辨識優化與固定擺放.md)，該文件保留早期驗證紀錄；目前連線方式以本 README 為準。
 
@@ -173,19 +182,38 @@ arduino-cli upload --fqbn realtek:AmebaPro2:Ameba_AMB82-MINI --port COM3 --input
 | 持續久坐第二次提醒 | 在座約 30 分鐘，活力降至 50 | 在座約 75 秒 |
 | 活力歸零 | 在座約 35 分鐘 | 在座約 90 秒 |
 | 有效休息 | 確認離席後連續 5 分鐘 | 確認離席後連續 10 秒 |
-| 成長 | 完成 3 輪達提醒門檻的學習＋休息 | 同左 |
+| 穀穀獎勵 | 有效讀書／電腦學習累積 5 分鐘獲得 1 份 | 累積 15 秒獲得 1 份 |
+| 成長點數 | 餵食 +1；完整一輪學習與休息 +2 | 同左 |
 
-這是遊戲參數，不是健康診斷或人體上限。在座、讀書、電腦情境都計入本輪時間，避免書本漏判造成不提醒。首次提醒是一組三聲短叫聲，第二次是一組兩聲短叫聲；每階段只播一次，死亡不額外叫。拍手只跳躍、不出聲。重連同步不補播舊提醒。
+這是遊戲參數，不是健康診斷或人體上限。在座、讀書、電腦情境都計入本輪時間，避免書本漏判造成不提醒。首次提醒是一組三聲短叫聲，第二次是一組兩聲短叫聲；每階段只播一次，死亡不額外叫。沒有拍手互動。重連同步不補播舊提醒。
 
-短暫離席不重設本輪時間。完成有效休息會恢復活力；只有本輪達到提醒門檻才獲得成長。死亡後完成休息會重生為蛋、代數加一，回座再孵化。原有桌前活動總時間不因死亡重設。
+短暫離席不重設本輪時間。完成有效休息會恢復活力；本輪達到提醒門檻再完成休息才獲得 +2 成長。死亡後完成休息會重生為蛋、代數加一，回座再孵化。原有桌前活動總時間不因死亡重設。
+
+### 穀穀、餵食與像素小屋
+
+- `STUDYING` 或 `COMPUTER` 且養成未暫停、未死亡時才累積穀穀；單純坐著、離席或資料失效不會獲得獎勵。短暫暫停保留未滿一份的進度，不補算中斷時間。
+- 糧倉最多 99 份，滿倉時不儲存額外獎勵。沒有免費起始糧食。
+- 回到桌前、資料有效且有糧食才能餵。每次扣 1 份、成長 +1，板端至少間隔 4 秒；網頁讓啄食動畫結束後才開放再餵。餵食不補活力、不清除久坐時間，也不會讓死亡小雞復活。
+- 成長依當代餵食次數＋完整學習休息輪數 ×2：孵化成小絨球；3 點成為小探險家、8 點成為陪讀夥伴、16 點成為小屋守護者。重生重設成長與未滿一份的獎勵進度，剩餘穀穀保留。
+- 小雞在房間與頁面活動區走動，支援走路、讀書、啄食、跳躍、眨眼、打盹、疲倦與蛋搖晃。點小雞可以摸摸，只播放互動動畫，不改學習判斷或成長點數。系統設定減少動態效果時，停止走動與動畫。
+- 房間、圖示與小雞均為內嵌像素 SVG，沒有外部圖片、字型或套件下載。手機版會調整卡片排列。
 
 錄影要加速時，在主程式將 `#define PET_DEMO 0` 改為 `1`，重新編譯燒錄；網頁會顯示展示設定。這仍依實際辨識運作，不是模擬活動。
 
+本次 SDK 的 `compiler.cpp.extra_flags` 未用於 C++ 編譯配方。若希望保留原始碼一般版預設，可使用以下展示版指令，保留原有板型旗標並額外定義 PET_DEMO：
+
+```text
+arduino-cli compile --fqbn realtek:AmebaPro2:Ameba_AMB82-MINI --build-property "build.extra_flags=-DARDUINO_SDK -DARDUINO_AMBPRO2 -DCORE_RTL8735B -DBOARD_AMB82_MINI {build.usb_flags} {build.menu_flags} -DPET_DEMO=1" --build-path .build/amb82-demo Day3_StudyBuddy_Verify
+arduino-cli upload --fqbn realtek:AmebaPro2:Ameba_AMB82-MINI --port COM3 --input-file .build/amb82-demo/flash_ntz.bin Day3_StudyBuddy_Verify
+```
+
+錄影後恢復一般版：重新編譯不帶上述展示旗標的 `.build/amb82`，再用該目錄的 `flash_ntz.bin` 燒錄。拍攝安排見 [第二週拍攝與補件指南](第二週_拍攝與補件指南.md)。
+
 ## 麥克風互動
 
-`PetSound.h` 每約 20 ms 讀取音量；兩次尖峰相隔 150～900 ms 視為雙拍手候選。預設尖峰門檻 8000、持續音量門檻 3000，皆是振幅值，不能當分貝。最近五秒有三秒偏高才進入環境吵雜，降至一秒或以下才解除。
+`PetSound.h` 每約 20 ms 讀取音量；預設持續音量門檻為 3000，是振幅值，不能當分貝。最近五秒有三秒偏高才進入環境吵雜，降至一秒或以下才解除。
 
-網頁只回應兩秒內的新拍手事件；必須仍在座、小雞存活、辨識及連線有效。叫聲或拍手動畫後五秒內不再回應拍手。這不是聲音分類模型，桌面敲擊、打字或喇叭可能造成誤觸，需實測校正。
+麥克風只產生 NOISY／QUIET 狀態事件，不產生拍手事件，也不因環境聲播放音效或跳躍。這不是聲音分類模型；打字、說話或喇叭聲都可能提高振幅，需要依環境校正門檻。
 
 ## 連線、暫停與儲存限制
 
@@ -195,8 +223,8 @@ arduino-cli upload --fqbn realtek:AmebaPro2:Ameba_AMB82-MINI --port COM3 --input
 - 活動總時間與寵物養成是不同計時器；前者仍可在辨識有效時繼續累計，後者依賴網頁心跳。
 - 養成與計數在 RAM，板子斷電或 RST 會重設，尚無 SD 卡存檔。
 - 板端保留最近 32 筆事件。網頁自動重試可補收短暫漏掉的事件；手動重新連線從目前開始。
-- 網頁保留最近 300 筆寵物事件、顯示最後 30 筆，可匯出 CSV；重新整理會清空頁面紀錄。
-- 校正資料最多保留最近 30 分鐘，重新連線會清空；需要留存請先匯出。
+- 小屋日記顯示本次開頁的最近五則生活事件，重新整理會清空日記；糧食、當代餵食次數和成長依板端資料恢復。日記不是每輪學習摘要，尚無跨斷電保存。
+- 網頁已移除校正、技術數值與 CSV 匯出；工程驗證仍可讀序列埠的 CSV／STATE／PET 資料。
 - 任一分頁送心跳都會維持養成，展示時建議只開一個主頁。
 
 ## 網路介面與資料格式
@@ -206,6 +234,7 @@ arduino-cli upload --fqbn realtek:AmebaPro2:Ameba_AMB82-MINI --port COM3 --input
 | `GET /` 或 `GET /pet_test.html` | 取得內嵌網頁 |
 | `POST /api/poll?after=-1` | 首次同步；需 `X-StudyBuddy: 1` 標頭 |
 | `POST /api/poll?after=<event_id>` | 取得快照與該事件編號之後仍在暫存的事件；同時更新心跳 |
+| `POST /api/feed?boot=<boot_tag>&revision=<revision>` | 需 `X-StudyBuddy: 1`；驗證目前開機、版本、心跳、在座、糧食與冷卻，成功 200，狀態不符 409，回傳 CARE |
 
 回應是 UTF-8 純文字，每行一筆：
 
@@ -214,10 +243,13 @@ NET,snapshot_sequence,last_event_id,board_ms
 CSV,...
 STATE,t_s,state,desk_s,study_s,computer_s,mode,away_count,last_away_s,head,headdown_s,remind,phone_present,phone_near_person,mic_level,mic_peak,noisy
 PET,t_ms,phase,energy,work_s,rest_s,cycles,rests,generation,reminders,paused,remind_goal_s,rest_goal_s,decay_s,demo,started
+CARE,boot_tag,revision,generation,food,feeds,learned_s,next_reward_s,reward_goal_s,last_feed_ms,can_feed
 EVENT,t_ms,event_id,event_name
 ```
 
-CSV 為 36 欄；新版 STATE 為 17 欄，最後三欄是麥克風資訊。PET 為 16 欄。時間為開機後秒數或毫秒，非日曆時間。麥克風沒有資料時音量為 -1；人臉舊欄位保留停用值。事件種類為 WELCOME、LEAVE、REMIND、WEAK、DIED、RESTED、REBORN、CLAP、NOISY、QUIET。
+CSV 為 36 欄；新版 STATE 為 17 欄，最後三欄是麥克風資訊。PET 為 16 欄，CARE 為 11 欄。時間為開機後秒數或毫秒，非日曆時間。麥克風沒有資料時音量為 -1；人臉舊欄位保留停用值。事件種類為 WELCOME、LEAVE、REMIND、WEAK、DIED、RESTED、REBORN、NOISY、QUIET、REWARD。
+
+CARE 每次輪詢都更新，即使辨識快照序號不變也能取回最新餵食結果。餵食採版本檢查，同一版本只扣一次；回應中斷時網頁只重新查詢，不自動重送餵食。這是區域網路原型，沒有帳號或登入驗證，boot_tag 不是安全憑證。
 
 網頁用 NET 序號去除重複快照，事件以編號去重。暫存溢出時回傳 `NOTICE,EVENT_GAP`。網頁 HTTP 請求逾 2 秒取消後重試；板端 Wi-Fi 斷線約每 10 秒嘗試重連，IP 改變需重新開網址。
 
@@ -232,6 +264,18 @@ node scripts/embed-web.cjs --check
 
 再編譯、燒錄並重新整理瀏覽器。`PetWebPage.h` 是產生檔，請勿直接改它。
 
+## VS Code 的 include 紅線
+
+若 Arduino 編譯正常，但 VS Code 將 WiFi.h、StreamIO.h 等標紅，先檢查 C/C++ IntelliSense 是否有設定 SDK 路徑。本專案的標頭由 Ameba SDK 提供，不需另裝 ESP32 或其他版本的 WiFi 函式庫。
+
+安裝 Microsoft C/C++ 擴充功能後，先依前述步驟編譯至 `.build/amb82`，再執行：
+
+```text
+node scripts/configure-vscode.cjs
+```
+
+工具會讀取實際 compile_commands.json，產生本機 `.vscode/c_cpp_properties.json` 與 `.ino` 的 C++ 檔案關聯，設定 ARM 編譯器、標頭路徑、巨集與 Arduino.h。這些含本機路徑的設定不提交 GitHub；換電腦或 SDK 版本後重新產生。若紅線未更新，執行「C/C++: Reset IntelliSense Database」或「Developer: Reload Window」。設定方法參考 [Microsoft C/C++ 文件](https://code.visualstudio.com/docs/cpp/customize-cpp-settings)。
+
 ## 自動測試與實機驗收
 
 在根目錄執行網頁測試：
@@ -245,10 +289,11 @@ node scripts/embed-web.cjs --check
 
 ```text
 g++ -std=c++14 -Wall -Wextra -pedantic -c tests/pet_life.test.cpp -o .build/pet_life.test.o
+g++ -std=c++14 -Wall -Wextra -pedantic -c tests/pet_care.test.cpp -o .build/pet_care.test.o
 g++ -std=c++14 -Wall -Wextra -pedantic -c tests/scene_relations.test.cpp -o .build/scene_relations.test.o
 ```
 
-可用 SDK 的 `arm-none-eabi-g++` 取代 g++。`tests/network_browser.test.cjs` 另以本機 HTTP 伺服器和無視窗 Chrome 驗證輪詢、斷線及手機／桌面版面：
+可用 SDK 的 `arm-none-eabi-g++` 取代 g++。`tests/network_browser.test.cjs` 另以本機 HTTP 伺服器和無視窗 Chrome 驗證輪詢、餵食與連點保護、小雞走動、減少動態效果、設定視窗鍵盤操作、斷線及手機／桌面版面：
 
 ```text
 node tests/network_browser.test.cjs
@@ -265,10 +310,10 @@ node tests/network_browser.test.cjs
 | 燒錄顯示 ping fail／upload fail | 確認 BOOT／RST 順序、實際 COM 埠、資料線及序列埠未被占用 |
 | 編譯找不到 WiFiSecrets.h | 先複製設定範本並填入本機 Wi-Fi |
 | 網頁開不起來 | 確認板子已啟動、實際 IP、同網路且無訪客裝置隔離；使用 http 而非 https |
-| 開得到網頁但沒更新 | 按「開始 Wi-Fi 連線」，檢查板端推論有無更新；HTTP 成功不代表影像有效 |
+| 開得到網頁但沒更新 | 按「開始陪伴」，檢查板端推論有無更新；HTTP 成功不代表影像有效 |
 | 沒有叫聲 | 點擊連線啟用音效、確認未靜音；首次同步或重連不會補播舊提醒 |
 | 書／手機辨識忽有忽無 | 固定光線、角度、大小及青框位置，查看候選分數與命中比例，勿把分數當準確率 |
-| 拍手不觸發／誤觸 | 查看音量與尖峰值，測試距離；離席、死亡、暫停或冷卻期間不回應 |
+| 環境提示過於敏感 | 查看音量與尖峰值，調整 MIC_NOISE_LEVEL，再測試安靜、打字與持續說話 |
 | 關頁面後停止養成 | 目前設計需要網頁心跳，屬於已知規則 |
 | 網頁還是舊內容 | 重新產生 PetWebPage.h、編譯、燒錄及整理頁面 |
 
