@@ -8,6 +8,8 @@
 #include "VideoStreamOverlay.h"
 #include "DetectionEvidence.h"
 #include "SceneRelations.h"
+#include "ObjectTracks.h"
+#include "StudyActivity.h"
 #include "PetLife.h"
 #include "PetNetwork.h"
 #include "PetSound.h"
@@ -92,19 +94,10 @@ std::vector<ObjectDetectionResult> latestObjects;
 unsigned long objectFrameMs = 0;
 bool objectReceived = false;
 bool latestPerson = false, latestBook = false, latestPhone = false, latestLaptop = false;
-DetectionEvidence bookEvidence, phoneEvidence, laptopEvidence;
+ObjectTracks objectTracks(BOOK_MIN_PERCENT, PHONE_MIN_PERCENT, LAPTOP_MIN_PERCENT);
 DetectionEvidence phoneNearEvidence, computerEvidence;
 bool bookStable = false, phoneStable = false, laptopStable = false;
 bool phoneNearStable = false, computerStable = false;
-
-// 寵物會用到的狀態
-enum StudyState {
-    ST_UNSURE,
-    ST_AWAY,
-    ST_PRESENT,
-    ST_STUDYING,
-    ST_COMPUTER
-};
 
 // 記住開始和最後看到的時間
 struct Hold {
@@ -132,6 +125,8 @@ const char *stateName(StudyState s)
             return "STUDYING";
         case ST_COMPUTER:
             return "COMPUTER";
+        case ST_PHONE:
+            return "PHONE";
         default:
             return "UNSURE";
     }
@@ -211,9 +206,7 @@ void onObjects(std::vector<ObjectDetectionResult> results)
     tableHits += frame.table; keyboardHits += frame.keyboard; mouseHits += frame.mouse; remoteHits += frame.remote;
     bookAssistHits += frame.bookAssist; phoneAssistHits += frame.phoneAssist;
     updateHold(callbackPersonHold, frame.person, now);
-    bookEvidence.observe(frame.book, now, BOOK_MIN_PERCENT);
-    phoneEvidence.observe(frame.phone, now, PHONE_MIN_PERCENT);
-    laptopEvidence.observe(frame.laptop, now, LAPTOP_MIN_PERCENT);
+    objectTracks.observe(items.data(), items.size(), now);
     phoneNearEvidence.observe(frame.phoneNear, now, PHONE_MIN_PERCENT);
     computerEvidence.observe(frame.computer, now, LAPTOP_MIN_PERCENT);
     latestPerson = frame.person; latestBook = frame.book; latestPhone = frame.phone; latestLaptop = frame.laptop;
@@ -223,14 +216,10 @@ void onObjects(std::vector<ObjectDetectionResult> results)
     xSemaphoreGive(detectionMutex);
 }
 
-// 線索打架就先只算在桌前
+// 手機優先，其他依書本和電腦線索分類
 StudyState seatedState(void)
 {
-    const bool computer = laptopStable || computerStable;
-    if (bookStable && computer) return ST_PRESENT;
-    if (bookStable) return ST_STUDYING;
-    if (computer) return ST_COMPUTER;
-    return ST_PRESENT;
+    return classifyActivity(phoneStable, bookStable, laptopStable || computerStable);
 }
 
 // 先看人在不在，再決定活動
@@ -245,11 +234,6 @@ StudyState decideState(unsigned long now)
     }
 
     return ST_UNSURE;
-}
-
-bool isSeatedState(StudyState s)
-{
-    return s == ST_PRESENT || s == ST_STUDYING || s == ST_COMPUTER;
 }
 
 const char *className(int type)
@@ -290,6 +274,9 @@ void updateLed(StudyState s, unsigned long now)
             break;
         case ST_COMPUTER:
             target[0] = 60; target[1] = 0; target[2] = 90;
+            break;
+        case ST_PHONE:
+            target[0] = 120; target[1] = 45; target[2] = 0;
             break;
         case ST_UNSURE:
             target[0] = 0;  target[1] = 0;  target[2] = 120;
@@ -418,13 +405,21 @@ void loop()
     bool hasPerson = objectFresh && latestPerson, hasBook = objectFresh && latestBook;
     bool hasPhone = objectFresh && latestPhone, hasLaptop = objectFresh && latestLaptop;
     personHold = callbackPersonHold;
-    bookEvidence.expire(now); phoneEvidence.expire(now); laptopEvidence.expire(now);
+    objectTracks.expire(now);
     phoneNearEvidence.expire(now); computerEvidence.expire(now);
-    bookStable = objectFresh && bookEvidence.active;
-    phoneStable = objectFresh && phoneEvidence.active;
-    laptopStable = objectFresh && laptopEvidence.active;
+    bookStable = objectFresh && objectTracks.present(CLASS_BOOK);
+    phoneStable = objectFresh && objectTracks.present(CLASS_PHONE);
+    laptopStable = objectFresh && objectTracks.present(CLASS_LAPTOP);
     phoneNearStable = objectFresh && phoneNearEvidence.active && phoneStable;
-    computerStable = objectFresh && computerEvidence.active;
+    computerStable = objectFresh && computerEvidence.active &&
+        objectTracks.present(CLASS_KEYBOARD) && objectTracks.present(CLASS_MOUSE);
+    ObjectTracks::View tracked[ObjectTracks::CAPACITY]{};
+    for (unsigned i=0; i<ObjectTracks::CAPACITY; ++i) {
+        const auto &t = objectTracks.tracks[i];
+        tracked[i].box=t.box;
+        tracked[i].id=t.evidence.active ? t.id : 0;
+        tracked[i].held=now-t.seen > 500;
+    }
 
     // 先複製統計，解鎖後再輸出
     bool logDue = now - windowStart >= LOG_INTERVAL_MS;
@@ -486,6 +481,19 @@ void loop()
         OSD.drawText(CHANNEL, xmin, std::max(0, ymin - (int)OSD.getTextHeight(CHANNEL)), text_str, OSD_COLOR_CYAN);
     }
 
+    // 漏掉時畫最後位置，黃框表示暫時保留，不是假裝又看見。
+    for (const auto &t : tracked) {
+        if (!objectFresh || !t.id) continue;
+        const Item box = t.box;
+        const int left=(int)(box.left*im_w), top=(int)(box.top*im_h);
+        const int right=(int)(box.right*im_w), bottom=(int)(box.bottom*im_h);
+        if (t.held) OSD.drawRect(CHANNEL,left,top,right,bottom,2,OSD_COLOR_YELLOW);
+        char label[48];
+        snprintf(label,sizeof(label),"%s #%lu%s",className(box.type),(unsigned long)t.id,t.held?" hold":" track");
+        OSD.drawText(CHANNEL,left,std::min(bottom,(int)im_h-(int)OSD.getTextHeight(CHANNEL)),label,
+                     t.held?OSD_COLOR_YELLOW:OSD_COLOR_CYAN);
+    }
+
     // 模型停住時先顯示無法確認
     state = objectFresh ? decideState(now) : ST_UNSURE;
 
@@ -517,7 +525,7 @@ void loop()
     const PetLife::Presence presence = seatedNow ? PetLife::AT_DESK :
         state == ST_AWAY ? PetLife::AWAY : PetLife::UNKNOWN;
     const unsigned petEvents = petLife.tick(now, presence, objectFresh && webAlive);
-    const bool learning = (state == ST_STUDYING || state == ST_COMPUTER) && !petLife.paused && !petLife.dead;
+    const bool learning = earnsLearningReward(state) && !petLife.paused && !petLife.dead;
     if (petNetwork.updateCare(now, learning, seatedNow && !petLife.paused && !petLife.dead && petLife.started, petLife.generation))
         petEvent("REWARD", now);
     const unsigned flags[] = {PetLife::WELCOME, PetLife::LEAVE, PetLife::REMIND,

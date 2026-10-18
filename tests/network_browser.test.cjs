@@ -9,7 +9,7 @@ const profile = path.join(root, '.build', 'network-browser-' + Date.now());
 const page = fs.readFileSync(path.join(root, 'web/pet_test.html'), 'utf8');
 const embedded = fs.readFileSync(path.join(root, 'Day3_StudyBuddy_Verify/PetWebPage.h'), 'utf8');
 assert.ok(embedded.includes(page.replace(/\r\n/g, '\n')));
-let polls = 0, sequence = 1, revision = 3, food = 3, feeds = 2, feedRequests = 0;
+let polls = 0, sequence = 1, revision = 3, food = 3, feeds = 2, feedRequests = 0, activity = 'STUDYING';
 const careLine = () => `CARE,123,${revision},1,${food},${feeds},900,180,300,0,1\n`;
 const server = http.createServer((req, res) => {
   if (req.url === '/' && req.method === 'GET') {
@@ -19,7 +19,7 @@ const server = http.createServer((req, res) => {
     polls++;
     const body = `NET,${sequence},0,${sequence * 1000}\n` +
       'CSV,10,10,10,90,5,52,7,65,0,0,0,0,-1,0,50,-1,1,1,0,1000,30,30,40,8,80,0,0,0,0,0,0,2,1,1,0\n' +
-      'STATE,10,STUDYING,120,60,20,A,0,0,-,0,0,1,1\n' +
+      `STATE,10,${activity},120,60,20,A,0,0,-,0,0,${activity==='PHONE'?1:0},0\n` +
       `PET,${sequence * 1000},HEALTHY,100,720,0,0,0,1,0,0,1500,300,600,0,1\n` + careLine();
     res.writeHead(200, { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' }); res.end(body); return;
   }
@@ -72,6 +72,7 @@ async function main() {
   };
   await call('Runtime.enable'); await call('Page.enable');
   for (const [name, width, height] of [['desktop', 1360, 1200], ['mobile', 390, 844]]) {
+    activity='STUDYING';sequence++;
     await call('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: name === 'mobile' });
     await call('Page.navigate', { url: 'http://127.0.0.1:' + server.address().port + '/' });
     await delay(500);
@@ -104,6 +105,18 @@ async function main() {
     await evaluate('target(roomPoint(.49,.86)); motion.x=motion.tx; motion.y=motion.ty; motion.next=Date.now()+10000;');await delay(50);
     const shot = await call('Page.captureScreenshot', { captureBeyondViewport: true });
     fs.writeFileSync(path.join(root, '.build/chick-home-' + name + '.png'), Buffer.from(shot.data, 'base64'));
+    for (const [mode,pose,prop] of [['STUDYING','read','study'],['COMPUTER','type','computer'],['PHONE','phone','phone']]) {
+      activity=mode;sequence++;await evaluate('pollNetwork()');await delay(100);
+      assert.equal(await evaluate(`document.getElementById('home').dataset.activity`),mode);
+      await evaluate('celebrateUntil=0; eatUntil=0; motion.ready=false;');await delay(80);
+      assert.equal(await evaluate(`document.getElementById('wanderer').dataset.pose`),pose);
+      assert.equal(await evaluate(`getComputedStyle(document.querySelector('.scene-${prop}')).display`),'block');
+      assert.ok(await evaluate('document.documentElement.scrollWidth <= document.documentElement.clientWidth'));
+      if(mode==='PHONE')assert.equal(await evaluate(`document.getElementById('rewardStatus').textContent`),'獎勵已暫停');
+      const modeShot=await call('Page.captureScreenshot',{captureBeyondViewport:true});
+      fs.writeFileSync(path.join(root,`.build/activity-${prop}-${name}.png`),Buffer.from(modeShot.data,'base64'));
+    }
+    activity='STUDYING';sequence++;await evaluate('pollNetwork()');
     await call('Emulation.setEmulatedMedia', {features:[{name:'prefers-reduced-motion',value:'reduce'}]});
     await evaluate('eatUntil = 0;');await delay(50);const still = await evaluate('motion.x');await delay(100);assert.equal(await evaluate('motion.x'), still);
     await call('Emulation.setEmulatedMedia', {features:[]});
@@ -113,7 +126,7 @@ async function main() {
     assert.equal(polls, before, 'disconnect stops heartbeat requests');
   }
   assert.equal(errors.length, 0, JSON.stringify(errors));
-  const report = { passed: true, polls, feedRequests, checks: ['same-origin HTTP', 'POST heartbeat', 'snapshot dedup', 'feed mutation and double-click guard', 'walking', 'reduced motion', 'keyboard dialog', 'disconnect', 'desktop/mobile layout'], scope: 'mock HTTP server, not Ameba hardware' };
+  const report = { passed: true, polls, feedRequests, checks: ['same-origin HTTP', 'POST heartbeat', 'snapshot dedup', 'feed mutation and double-click guard', 'walking', 'distinct reading/computer/phone scenes and animations', 'phone reward pause indicator', 'reduced motion', 'keyboard dialog', 'disconnect', 'desktop/mobile layout'], scope: 'mock HTTP server, not Ameba hardware' };
   fs.writeFileSync(path.join(root, '.build/network-browser-result.json'), JSON.stringify(report, null, 2));
   console.log('PASS: browser HTTP, feeding, walking, reduced motion, dialog, disconnect and desktop/mobile layout');
 }

@@ -14,7 +14,7 @@ const run=code=>vm.runInContext(code,context);
 run(html.match(/<script>([\s\S]*?)<\/script>/)[1]);
 const life=(phase='HEALTHY',reminders=0,paused=0)=>`PET,1000,${phase},90,120,0,0,0,1,${reminders},${paused},1500,300,600,0,1`;
 const care=(revision=2,food=2,feeds=0,boot=123)=>`CARE,${boot},${revision},1,${food},${feeds},600,300,300,0,1`;
-const snapshot=(seq=1,p=life(),c=care(),event='')=>`NET,${seq},0,${seq*1000}\nSTATE,10,STUDYING,120,60,20,A,0,0,-,0,0,0,0\n${p}\n${c}\n${event}`;
+const snapshot=(seq=1,p=life(),c=care(),event='',activity='STUDYING')=>`NET,${seq},0,${seq*1000}\nSTATE,10,${activity},120,60,20,A,0,0,-,0,0,${activity==='PHONE'?1:0},0\n${p}\n${c}\n${event}`;
 const send=s=>context.applySnapshot(s);
 async function main(){
  assert.equal(element('feedButton').disabled,true);
@@ -47,9 +47,17 @@ async function main(){
  await context.disconnect();assert.equal(run('fresh()'),false);assert.equal(element('feedButton').disabled,true);
  fetchImpl=async()=>({ok:true,text:async()=>snapshot(2,life('TIRED',1),care(0,0,0,456))});await context.connect();assert.equal(chirps,5,'reconnect is quiet');
  run('soundEnabled=false');send(snapshot(3,life('WEAK',1),care(0,0,0,456)));assert.equal(chirps,5);
+ send(snapshot(4,life(),care(0,0,0,456),'','COMPUTER'));context.frame(100);
+ assert.equal(element('home').dataset.activity,'COMPUTER');assert.equal(element('activityTitle').textContent,'電腦學習時間');assert.equal(element('wanderer').dataset.pose,'type');
+ send(snapshot(5,life(),care(0,0,0,456),'','PHONE'));context.frame(200);
+ assert.equal(element('home').dataset.activity,'PHONE');assert.equal(element('rewardStatus').textContent,'獎勵已暫停');assert.match(element('rewardHint').textContent,/暫停在剩餘/);assert.equal(element('wanderer').dataset.pose,'phone');
+ run('soundEnabled=true');send(snapshot(6,life('TIRED',1),care(0,0,0,456),'','PHONE'));assert.equal(chirps,8,'phone does not disable sitting reminders');
+ send(snapshot(7,life(),care(0,0,0,456),'','STUDYING'));context.frame(300);
+ assert.equal(element('home').dataset.activity,'STUDYING');assert.equal(element('wanderer').dataset.pose,'read');assert.equal(element('rewardStatus').textContent,'穀穀累積中');
+ now+=3100;context.render();context.frame(400);assert.equal(element('home').dataset.activity,'PAUSED');assert.equal(element('rewardStatus').textContent,'獎勵已暫停');
  element('homeAddress').value='javascript:alert(1)';element('openHome').onclick();assert.equal(context.location.assigned,undefined);
  element('homeAddress').value='192.168.1.88';element('openHome').onclick();assert.equal(context.location.assigned,'http://192.168.1.88/');
  await context.disconnect();context.location.protocol='file:';await context.connect();assert.equal(element('settings').open,true);assert.equal(run('networkEnabled'),false);
- console.log('PASS: pixel UI, telemetry validation/freshness, reminders, rewards, feed reconciliation, reboot and reconnect');
+ console.log('PASS: distinct reading/computer/phone scenes, reward pause display, freshness, reminders, feeding and reconnect');
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});

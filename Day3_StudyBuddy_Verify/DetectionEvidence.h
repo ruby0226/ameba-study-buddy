@@ -1,15 +1,21 @@
 #pragma once
 #include <stdint.h>
 
+#if __cplusplus >= 201402L
+#define EVIDENCE_FN constexpr
+#else
+#define EVIDENCE_FN inline
+#endif
+
 // 多看幾次才算，短暫漏掉先保留
 struct DetectionEvidence {
     struct Bucket { uint32_t start = 0; unsigned samples = 0; unsigned hits = 0; };
-    Bucket buckets[5];
+    Bucket buckets[5]{};
     uint32_t lastFrame = 0, lastHit = 0, evidenceSince = 0;
     bool received = false, active = false, seeded = false;
 
     // 太舊的結果就清掉
-    void expire(uint32_t now) {
+    EVIDENCE_FN void expire(uint32_t now) {
         for (auto &b : buckets) {
             if (b.samples && now - b.start >= 5000) b = Bucket();
         }
@@ -22,7 +28,7 @@ struct DetectionEvidence {
     }
 
     // 只放新推論，至少跨 1 秒才成立
-    void observe(bool hit, uint32_t now, unsigned minPercent) {
+    EVIDENCE_FN void observe(bool hit, uint32_t now, unsigned minPercent) {
         expire(now);
         received = true;
         lastFrame = now;
@@ -48,3 +54,4 @@ struct DetectionEvidence {
             active = true;
     }
 };
+#undef EVIDENCE_FN
