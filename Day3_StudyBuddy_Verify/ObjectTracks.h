@@ -14,8 +14,8 @@
 struct ObjectTracks {
     enum { CAPACITY = 12, LOST_MS = 3000, STALE_MS = 2000, KEEP_MIN_SCORE = 15,
            LOCK_NOW_SCORE = 50, CONFIRM_MS = 2000, EXIT_MS = 1000,
-           // 只靠畫面比對最多撐 5 秒，之後要 YOLO 再看到一次，免得框黏在背景上
-           VISUAL_MAX_MS = 5000, FRESH_BOX_MS = 300 };
+           // 只靠畫面比對最多撐 10 秒，之後要 YOLO 再看到一次，免得框黏在背景上
+           VISUAL_MAX_MS = 10000, FRESH_BOX_MS = 300 };
     struct Track {
         SceneRelations::Item box{0, 0, 0, 0, 0, 0};
         uint32_t id = 0, seen = 0, lockedAt = 0, yoloSeen = 0, templateAt = 0;

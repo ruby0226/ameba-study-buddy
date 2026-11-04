@@ -14,10 +14,14 @@ namespace VisualTracker {
 enum { W = 160, H = 90, T = 16, SEARCH = 8 };
 // 平均每點差異低於這個值才算找到；樣板太平（像白牆）不追，免得到處都像
 const int MATCH_MAX = 22, FLAT_MIN = 6;
+// 還要像 YOLO 框到時的原始樣子，避免樣板慢慢變成衣服或背景
+const int ANCHOR_MAX = 30;
 
 struct Frame { uint8_t px[W * H]; };
 struct Template {
-    int8_t v[T * T]{};    // 扣掉平均後的亮度，除以 2 存
+    int8_t v[T * T]{};      // 扣掉平均後的亮度，除以 2 存，會慢慢更新
+    int8_t anchor[T * T]{}; // YOLO 框到時的原始樣子，不更新
+    int spread = 0;         // 原始樣子的花紋強度
     bool valid = false;
 };
 
@@ -50,9 +54,10 @@ VISUAL_FN Template capture(const Frame &f, SceneRelations::Item box) {
     int spread = 0;
     for (int k = 0; k < T * T; ++k) {
         spread += s[k] < 0 ? -s[k] : s[k];
-        t.v[k] = (int8_t)clampi(s[k] / 2, -127, 127);
+        t.v[k] = t.anchor[k] = (int8_t)clampi(s[k] / 2, -127, 127);
     }
-    t.valid = spread / (T * T) >= FLAT_MIN;
+    t.spread = spread / (T * T);
+    t.valid = t.spread >= FLAT_MIN;
     return t;
 }
 
@@ -63,6 +68,7 @@ VISUAL_FN Match find(const Frame &f, const Template &t, SceneRelations::Item box
     Match best{false, 1 << 30, box};
     if (!t.valid) return best;
     int s[T * T]{};
+    int bestDx = 0, bestDy = 0;
     for (int dy = -SEARCH; dy <= SEARCH; ++dy)
         for (int dx = -SEARCH; dx <= SEARCH; ++dx) {
             if (!sample(f, box, dx, dy, s)) continue;
@@ -75,12 +81,22 @@ VISUAL_FN Match find(const Frame &f, const Template &t, SceneRelations::Item box
             err /= T * T;
             if (err < best.error) {
                 best.error = err;
+                bestDx = dx; bestDy = dy;
                 best.box = box;
                 best.box.left += (float)dx / W; best.box.right += (float)dx / W;
                 best.box.top += (float)dy / H; best.box.bottom += (float)dy / H;
             }
         }
     best.found = best.error <= MATCH_MAX;
+    if (!best.found || !sample(f, box, bestDx, bestDy, s)) return best;
+    // 找到的地方花紋太淡（素色衣服、牆）或不像原始樣子，就不算
+    int spread = 0, drift = 0;
+    for (int k = 0; k < T * T; ++k) {
+        spread += s[k] < 0 ? -s[k] : s[k];
+        const int d = s[k] - t.anchor[k] * 2;
+        drift += d < 0 ? -d : d;
+    }
+    best.found = spread * 2 >= t.spread * T * T && drift <= ANCHOR_MAX * T * T;
     return best;
 }
 

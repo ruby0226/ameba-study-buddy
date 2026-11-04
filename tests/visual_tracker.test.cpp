@@ -52,17 +52,49 @@ constexpr bool tracksWithoutYolo() {
     t.observe(nullptr, 0, 5700); t.follow(scene(0, 0, false), 5700);
     return !t.present(CLASS_BOOK);
 }
-// 畫面一直比對得到，YOLO 超過 5 秒沒再看到也要放棄，免得黏在背景上
+// 畫面一直比對得到，YOLO 超過 10 秒沒再看到也要放棄，免得黏在背景上
 constexpr bool visualOnlyGivesUp() {
     ObjectTracks t;
     t.observe(&box, 1, 100);
     t.follow(scene(60, 50), 150);
-    for (uint32_t n = 600; n <= 5100; n += 500) { t.observe(nullptr, 0, n); t.follow(scene(60, 50), n); }
+    for (uint32_t n = 600; n <= 10100; n += 500) { t.observe(nullptr, 0, n); t.follow(scene(60, 50), n); }
     if (!t.present(CLASS_BOOK)) return false;
-    t.observe(nullptr, 0, 5200); t.follow(scene(60, 50), 5200);
+    t.observe(nullptr, 0, 10200); t.follow(scene(60, 50), 10200);
     return !t.present(CLASS_BOOK);
 }
-static_assert(visualOnlyGivesUp(), "Visual-only tracking ends 5 s after the last YOLO hit");
+static_assert(visualOnlyGivesUp(), "Visual-only tracking ends 10 s after the last YOLO hit");
+
+// 同一個位置換成別的花紋（像物品拿走後露出的衣服），亮度、粗細都不同
+constexpr Gray shirt(int light = 0) {
+    Gray f{};
+    for (int j = 0; j < VisualTracker::H; ++j)
+        for (int i = 0; i < VisualTracker::W; ++i) {
+            const int u = i - 60, w = j - 50;
+            int v = 120;
+            if (u >= 0 && u < 32 && w >= 0 && w < 24) v = ((u / 2 + w / 6) % 2) * 70 + 30 + light;
+            f.px[j * VisualTracker::W + i] = (uint8_t)v;
+        }
+    return f;
+}
+// 樣板被慢慢混成衣服後，雖然很像現在的畫面，但不像原始物品，不能算找到
+constexpr bool driftedTemplateRejected() {
+    VisualTracker::Template t = VisualTracker::capture(scene(60, 50), box);
+    for (int k = 0; k < 40; ++k) VisualTracker::blend(t, shirt(), box);
+    return VisualTracker::find(shirt(), t, box).error <= VisualTracker::MATCH_MAX &&
+           !VisualTracker::find(shirt(), t, box).found;
+}
+static_assert(driftedTemplateRejected(), "A template that drifted onto the shirt no longer counts as the object");
+// 物品原地變暗、花紋變淡（像黑衣服），花紋強度不到一半就不算
+constexpr Gray faint() {
+    Gray f = scene(60, 50);
+    for (int k = 0; k < VisualTracker::W * VisualTracker::H; ++k) f.px[k] = (uint8_t)(120 + (f.px[k] - 120) / 4);
+    return f;
+}
+constexpr bool faintAreaRejected() {
+    const VisualTracker::Template t = VisualTracker::capture(scene(60, 50), box);
+    return !VisualTracker::find(faint(), t, box).found;
+}
+static_assert(faintAreaRejected(), "A low-contrast area is not taken as the object");
 static_assert(findsShiftedObject(), "Template finds the object after it moves and the light changes");
 static_assert(removedObjectNotFound(), "Plain desk does not match a removed object");
 static_assert(flatAreaNotTracked(), "Featureless areas are never used as templates");
