@@ -13,6 +13,16 @@
 #include "PetLife.h"
 #include "PetNetwork.h"
 #include "PetSound.h"
+
+// YOLO 漏看時用畫面比對繼續追，改成 0 就只靠 YOLO
+#ifndef USE_VISUAL_TRACK
+#define USE_VISUAL_TRACK 1
+#endif
+#if USE_VISUAL_TRACK
+#include "SPI.h"
+#include <JPEGDEC_Libraries/JPEGDEC.h>
+#include "GrayCamera.h"
+#endif
 using namespace SceneRelations;
 extern "C" {
 #include "FreeRTOS.h"
@@ -21,6 +31,8 @@ extern "C" {
 
 #define CHANNEL   0
 #define CHANNELNN 3
+// 追蹤用的小張 JPEG，解成 160×90 灰階
+#define CHANNELJPEG 1
 
 // 送進模型的影像大小
 #define NNWIDTH  576
@@ -39,13 +51,16 @@ PetLife::Clock petLife(25UL * 60000, 5UL * 60000, 10UL * 60000);
 #endif
 PetNetwork petNetwork;
 unsigned long petEventId = 0;
+// 已套用到小雞計時的計畫編號，上一圈是否在有效學習
+uint32_t appliedPlan = 0;
+bool lastLearning = false;
 
 // 麥克風只看環境音量
 PetSound petSound;
 bool soundReady = false, lastNoisy = false;
 
 // 分數不夠就先不算
-#define NN_CONF_THRESH   0.25f
+#define NN_CONF_THRESH   0.15f
 // 坐穩 3 秒才開始，離開 10 秒才算離席
 #define HOLD_MS          3000
 #define AWAY_MS          10000
@@ -68,6 +83,13 @@ bool soundReady = false, lastNoisy = false;
 
 VideoSetting config(VIDEO_FHD, 30, VIDEO_H264, 0);
 VideoSetting configNN(NNWIDTH, NNHEIGHT, 10, VIDEO_RGB, 0);
+#if USE_VISUAL_TRACK
+VideoSetting configJpeg(VisualTracker::W * 4, VisualTracker::H * 4, 10, VIDEO_JPEG, 1);
+GrayCamera grayCamera(CHANNELJPEG);
+bool grayReady = false;
+// 每秒統計拍照成功次數、耗時與靠畫面追到的次數，序列埠看得出畫面追蹤有沒有在動
+unsigned grabTries = 0, grabOk = 0, grabMsSum = 0, visualHits = 0;
+#endif
 NNObjectDetection ObjDet;
 StreamIO videoStreamerNN(1, 1);
 RTSP rtsp;
@@ -234,6 +256,10 @@ StudyState decideState(unsigned long now)
     if (heldFor(personHold, now, HOLD_MS)) {
         return seatedState();
     }
+    // 已經確認離席，零星誤判成人不算回座，要穩定 3 秒才算
+    if (state == ST_AWAY) {
+        return ST_AWAY;
+    }
 
     return ST_UNSURE;
 }
@@ -338,6 +364,9 @@ void setup()
     config.setBitrate(2 * 1024 * 1024);
     Camera.configVideoChannel(CHANNEL, config);
     Camera.configVideoChannel(CHANNELNN, configNN);
+#if USE_VISUAL_TRACK
+    Camera.configVideoChannel(CHANNELJPEG, configJpeg);
+#endif
     Camera.videoInit();
 
     rtsp.configVideo(config);
@@ -373,6 +402,9 @@ void setup()
     }
 
     Camera.channelBegin(CHANNELNN);
+#if USE_VISUAL_TRACK
+    Camera.channelBegin(CHANNELJPEG);
+#endif
 
     OSD.configVideo(CHANNEL, config);
     OSD.begin();
@@ -381,7 +413,7 @@ void setup()
     if (!soundReady) Serial.println("ERROR,microphone start failed");
 
     printRtspUrl();
-    if (!petNetwork.begin(ssid, pass, PET_DEMO ? 15000 : 300000)) Serial.println("ERROR,web server task failed");
+    if (!petNetwork.begin(ssid, pass, PET_DEMO ? 15000 : 300000, PET_DEMO)) Serial.println("ERROR,web server task failed");
     Serial.print("Pet web: http://");
     Serial.print(ip);
     Serial.println("/");
@@ -408,6 +440,9 @@ void loop()
     bool hasPhone = objectFresh && latestPhone, hasLaptop = objectFresh && latestLaptop;
     personHold = callbackPersonHold;
     objectTracks.expire(now);
+#if USE_VISUAL_TRACK
+    if (grayReady) visualHits += objectTracks.follow(grayCamera.frame, now);
+#endif
     phoneNearEvidence.expire(now); computerEvidence.expire(now);
     bookStable = objectFresh && objectTracks.present(CLASS_BOOK);
     phoneStable = objectFresh && objectTracks.present(CLASS_PHONE);
@@ -441,16 +476,15 @@ void loop()
     // USB 只留除錯，不控制養成
     while (Serial.available() > 0) Serial.read();
 
-    // 白框是有效目標，黃框是候選
+    // 白框是有效目標，黃框是候選；人只有最大的那個是白框
     OSD.createBitmap(CHANNEL);
-    OSD.drawRect(CHANNEL, (int)(DESK_LEFT * im_w), (int)(DESK_TOP * im_h),
-                 (int)(DESK_RIGHT * im_w), (int)(DESK_BOTTOM * im_h), 2, OSD_COLOR_CYAN);
 
     if (DESK_ROI_TOP > 0) {
         OSD.drawRect(CHANNEL, 0, (int)(DESK_ROI_TOP * im_h), im_w - 1, im_h - 1, 2, OSD_COLOR_YELLOW);
     }
 
     const auto items = sceneItems(results);
+    const int mainIndex = mainPerson(items.data(), items.size());
     for (size_t i = 0; objectFresh && i < results.size(); i++) {
         int obj_type = results[i].type();
         const char *name = className(obj_type);
@@ -461,8 +495,8 @@ void loop()
         ObjectDetectionResult item = results[i];
         int score = item.score();
         const Item candidate = items[i];
-        bool confident = score >= scoreThreshold(obj_type) &&
-            (obj_type == CLASS_PERSON || obj_type == CLASS_TABLE || inDesk(candidate));
+        bool confident = score >= scoreThreshold(obj_type);
+        if (obj_type == CLASS_PERSON) confident = (int)i == mainIndex;
         if (obj_type == CLASS_BOOK) confident = acceptBook(candidate, items.data(), items.size());
         if (obj_type == CLASS_PHONE) confident = acceptPhone(candidate, items.data(), items.size());
 
@@ -489,7 +523,7 @@ void loop()
         if (held) OSD.drawRect(CHANNEL,left,top,right,bottom,2,OSD_COLOR_YELLOW);
         char label[48];
         snprintf(label,sizeof(label),"%s #%lu %lus%s",className(box.type),(unsigned long)t.id,
-                 (unsigned long)(t.trackedMs/1000),held?" lost":" track");
+                 (unsigned long)(t.trackedMs/1000),held?" lost":t.visual?" vis":" track");
         OSD.drawText(CHANNEL,left,std::min(bottom,(int)im_h-(int)OSD.getTextHeight(CHANNEL)),label,
                      held?OSD_COLOR_YELLOW:OSD_COLOR_CYAN);
         // 給網頁：類別-ID-秒數-是否漏看，最多四件
@@ -531,8 +565,27 @@ void loop()
     const bool webAlive = petNetwork.alive();
     const PetLife::Presence presence = seatedNow ? PetLife::AT_DESK :
         state == ST_AWAY ? PetLife::AWAY : PetLife::UNKNOWN;
-    const unsigned petEvents = petLife.tick(now, presence, objectFresh && webAlive);
+    // 網頁設定的計畫：換了新計畫就套用專注與休息時間，這一輪重新開始
+    PetPlan plan(PET_DEMO);
+    const unsigned planEvents = petNetwork.updatePlan(now, lastLearning, plan);
+    if (plan.serial != appliedPlan) {
+        appliedPlan = plan.serial;
+        petLife.remindMs = plan.focusS * 1000;
+        petLife.restGoalMs = plan.restS * 1000;
+        // 提醒後再撐專注時間的四成才歸零，最少 15 秒
+        petLife.decayMs = std::max<uint32_t>(15000, plan.focusS * 400);
+        petLife.workMs = petLife.restMs = 0;
+        petLife.reminded = false;
+        if (!petLife.dead) petLife.energy = 100;
+        petEvent("PLAN_SET", now);
+    }
+    if (planEvents & PetPlan::STARTED) petEvent("PLAN_START", now);
+    if (planEvents & PetPlan::GOAL) petEvent("GOAL", now);
+    // 沒有計畫或還沒開始就不計時；離開時手機常鎖屏，休息不需要網頁開著，在座才要網頁
+    const unsigned petEvents = petLife.tick(now, presence,
+        objectFresh && plan.active() && (webAlive || presence == PetLife::AWAY));
     const bool learning = earnsLearningReward(state) && !petLife.paused && !petLife.dead;
+    lastLearning = learning;
     if (petNetwork.updateCare(now, learning, seatedNow && !petLife.paused && !petLife.dead && petLife.started, petLife.generation))
         petEvent("REWARD", now);
     const unsigned flags[] = {PetLife::WELCOME, PetLife::LEAVE, PetLife::REMIND,
@@ -592,7 +645,22 @@ void loop()
                (unsigned long)(petLife.decayMs / 1000), PET_DEMO, petLife.started);
         petNetwork.publish(csvLine.c_str(), stateLine, petLine);
         Serial.println(csvLine); Serial.println(stateLine); Serial.println(petLine);
+#if USE_VISUAL_TRACK
+        char visLine[64];
+        snprintf(visLine, sizeof(visLine), "VIS,%lu,%u,%u,%u,%u", now / 1000, grabOk, grabTries,
+                 grabOk ? grabMsSum / grabOk : 0, visualHits);
+        Serial.println(visLine);
+        grabTries = grabOk = grabMsSum = visualHits = 0;
+#endif
     }
 
+#if USE_VISUAL_TRACK
+    // 拍照本身會等下一張畫面，不用再 delay
+    grayReady = grayCamera.grab();
+    ++grabTries;
+    if (grayReady) { ++grabOk; grabMsSum += grayCamera.lastMs; }
+    if (!grayReady) delay(100);
+#else
     delay(100);
+#endif
 }

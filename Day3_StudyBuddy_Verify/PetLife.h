@@ -23,7 +23,7 @@ struct Clock {
     PET_FN Clock(uint32_t remind, uint32_t rest, uint32_t decay)
         : remindMs(remind), restGoalMs(rest), decayMs(decay) {}
 
-    // 斷線或看不清楚，不扣活力也不送休息獎勵
+    // 斷線或看不清楚，不扣活力也不加休息；已休息的進度先保留，回座才歸零
     PET_FN unsigned tick(uint32_t now, Presence presence, bool reliable) {
         unsigned events = 0;
         const uint32_t dt = initialized ? now - lastMs : 0;
@@ -32,7 +32,6 @@ struct Clock {
         paused = !reliable || presence == UNKNOWN || dt > 1500;
         if (paused) {
             previous = UNKNOWN;
-            restMs = 0;
             return 0;
         }
         if (presence != lastKnown) {

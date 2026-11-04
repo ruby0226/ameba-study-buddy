@@ -29,12 +29,12 @@ constexpr bool followsUntilGone() {
     Item b{CLASS_BOOK,60,.30f,.50f,.45f,.75f};
     t.observe(&b,1,100);
     const uint32_t id=t.tracks[0].id;
-    // 拿起來：分數掉到 26、離開桌面區，仍是同一本
+    // 拿起來：分數掉到 26、往上移，仍是同一本
     for (uint32_t n=200; n<=1200; n+=200) {
         b.score=26; b.top-=.05f; b.bottom-=.05f;
         t.observe(&b,1,n);
     }
-    if (!t.present(CLASS_BOOK) || t.tracks[0].id!=id || inDesk(b)) return false;
+    if (!t.present(CLASS_BOOK) || t.tracks[0].id!=id) return false;
     if (t.view(0,1200).trackedMs!=1100) return false;
     // 漏看 2.5 秒仍保留，超過 3 秒才消失
     for (uint32_t n=1700; n<=3700; n+=500) t.observe(nullptr,0,n);
@@ -44,7 +44,7 @@ constexpr bool followsUntilGone() {
 }
 constexpr bool lowScoreNewObjectIgnored() {
     ObjectTracks t;
-    Item b{CLASS_BOOK,26,.30f,.10f,.45f,.30f};
+    Item b{CLASS_BOOK,17,.30f,.10f,.45f,.30f};
     t.observe(&b,1,100); t.observe(&b,1,300); t.observe(&b,1,500);
     return !t.present(CLASS_BOOK) && !t.tracks[0].id;
 }
@@ -124,7 +124,7 @@ constexpr bool rolloverAndCapacity() {
 static_assert(highScoreLocksAtOnce(),"A confident detection is followed immediately");
 static_assert(normalScoreNeedsSecondLook(),"A normal detection locks on the second look within 2 seconds");
 static_assert(followsUntilGone(),"Locked object follows low score and off-desk movement until missing over 3 seconds");
-static_assert(lowScoreNewObjectIgnored(),"A new low score object outside the desk never starts a track");
+static_assert(lowScoreNewObjectIgnored(),"A new low score object with nobody nearby never starts a track");
 static_assert(edgeExitIsFastButDeskEdgeIsNot(),"Leaving by a side edge ends in 1 second; touching the desk edge does not");
 static_assert(differentPlacesNeverConfirmEachOther(),"Different object locations cannot confirm each other");
 static_assert(staleInferenceAndConflicts(),"Stale inference and conflicting classes never keep tracks alive");

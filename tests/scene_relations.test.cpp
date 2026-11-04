@@ -4,8 +4,8 @@ using namespace SceneRelations;
 // 編譯時直接檢查，失敗就不會通過
 constexpr Item person{CLASS_PERSON, 90, .20f, .05f, .80f, .85f};
 constexpr Item table{CLASS_TABLE, 70, .05f, .45f, .95f, .99f};
-constexpr Item weakBook{CLASS_BOOK, 27, .35f, .55f, .65f, .80f};
-constexpr Item weakPhone{CLASS_PHONE, 27, .42f, .57f, .50f, .74f};
+constexpr Item weakBook{CLASS_BOOK, 17, .35f, .55f, .65f, .80f};
+constexpr Item weakPhone{CLASS_PHONE, 17, .42f, .57f, .50f, .74f};
 constexpr Item phone{CLASS_PHONE, 60, .42f, .57f, .50f, .74f};
 constexpr Item key{CLASS_KEYBOARD, 80, .30f, .56f, .62f, .72f};
 constexpr Item mouse{CLASS_MOUSE, 80, .65f, .59f, .73f, .68f};
@@ -24,16 +24,31 @@ constexpr Item distantPerson[] = {{CLASS_PERSON, 90, .0f, .05f, .15f, .50f}, tab
 static_assert(!evaluate(distantPerson, 3).book, "distant person cannot support weak book");
 constexpr Item strongBook[] = {{CLASS_BOOK, 60, .35f, .55f, .65f, .80f}};
 static_assert(evaluate(strongBook, 1).book && !evaluate(strongBook, 1).bookAssist, "strong book does not require table model");
-constexpr Item outsideBook[] = {person, table, {CLASS_BOOK, 90, .01f, .55f, .05f, .80f}};
-static_assert(!evaluate(outsideBook, 3).book, "book outside desk is rejected");
-constexpr Item keyboardConflict[] = {person, table, {CLASS_BOOK, 27, .30f, .56f, .62f, .72f}, key};
+constexpr Item edgeBook[] = {person, table, {CLASS_BOOK, 90, .01f, .55f, .05f, .80f}};
+static_assert(evaluate(edgeBook, 3).book, "no desk zone: a clear book anywhere counts");
+
+// 只認最大的人：背景小人旁邊的低分物品不算
+constexpr Item bystander{CLASS_PERSON, 95, .02f, .10f, .18f, .45f};
+constexpr Item mainUser{CLASS_PERSON, 80, .45f, .05f, .98f, .95f};
+constexpr Item twoPeople[] = {bystander, mainUser};
+static_assert(mainPerson(twoPeople, 2) == 1 && mainPerson(nullptr, 0) < 0, "largest person wins over higher score");
+constexpr Item bystanderBook[] = {bystander, mainUser, table, {CLASS_BOOK, 17, .03f, .30f, .12f, .44f}};
+static_assert(!evaluate(bystanderBook, 4).book, "weak book next to a bystander is ignored");
+constexpr Item bystanderPhone[] = {bystander, mainUser, {CLASS_PHONE, 17, .06f, .20f, .12f, .32f}};
+static_assert(!evaluate(bystanderPhone, 3).phone, "weak phone next to a bystander is ignored");
+constexpr Item mainPhone[] = {bystander, mainUser, {CLASS_PHONE, 17, .68f, .30f, .76f, .45f}};
+static_assert(evaluate(mainPhone, 3).phone && evaluate(mainPhone, 3).phoneNear, "weak phone next to the main person counts");
+constexpr Item bystanderComputer[] = {mainUser, {CLASS_PERSON, 90, .0f, .40f, .30f, .99f},
+    {CLASS_KEYBOARD, 80, .02f, .70f, .14f, .80f}, {CLASS_MOUSE, 80, .16f, .72f, .22f, .80f}};
+static_assert(!evaluate(bystanderComputer, 4).computer, "keyboard and mouse at a bystander are not computer work");
+constexpr Item keyboardConflict[] = {person, table, {CLASS_BOOK, 17, .30f, .56f, .62f, .72f}, key};
 static_assert(!evaluate(keyboardConflict, 4).book, "stronger overlapping keyboard blocks book");
 
 constexpr Item phoneContext[] = {person, table, weakPhone};
 static_assert(evaluate(phoneContext, 3).phoneAssist && evaluate(phoneContext, 3).phoneNear, "weak phone supported by person and table");
 constexpr Item phoneOnly[] = {weakPhone};
 static_assert(!evaluate(phoneOnly, 1).phone, "weak phone alone rejected");
-constexpr Item raisedPhone[] = {person, {CLASS_PHONE, 27, .42f, .22f, .50f, .36f}};
+constexpr Item raisedPhone[] = {person, {CLASS_PHONE, 17, .42f, .22f, .50f, .36f}};
 static_assert(evaluate(raisedPhone, 2).phone && evaluate(raisedPhone, 2).phoneNear, "phone near body may be above desk");
 constexpr Item remoteConflict[] = {person, table, phone, {CLASS_REMOTE, 90, .42f, .57f, .50f, .74f}};
 static_assert(!evaluate(remoteConflict, 4).phone, "stronger remote at same box blocks phone");

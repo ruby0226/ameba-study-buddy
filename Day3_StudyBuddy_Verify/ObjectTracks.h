@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include "SceneRelations.h"
+#include "VisualTracker.h"
 
 #if __cplusplus >= 201402L
 #define TRACK_FN constexpr
@@ -9,16 +10,19 @@
 #endif
 
 // 看到就開始跟：分數高立刻鎖定，分數普通 2 秒內再看到一次就鎖定。
-// 鎖定後放寬條件一路跟著，直到真的不見。仍靠 YOLO 每幀的框，不是光流或外觀追蹤。
+// 鎖定後 YOLO 框到就用框，框不到就用畫面比對（VisualTracker）跟著，直到真的不見。
 struct ObjectTracks {
-    enum { CAPACITY = 12, LOST_MS = 3000, STALE_MS = 2000, KEEP_MIN_SCORE = 25,
-           LOCK_NOW_SCORE = 50, CONFIRM_MS = 2000, EXIT_MS = 1000 };
+    enum { CAPACITY = 12, LOST_MS = 3000, STALE_MS = 2000, KEEP_MIN_SCORE = 15,
+           LOCK_NOW_SCORE = 50, CONFIRM_MS = 2000, EXIT_MS = 1000,
+           // 只靠畫面比對最多撐這麼久，之後要 YOLO 再看到一次，免得跟著背景跑
+           VISUAL_MAX_MS = 60000, FRESH_BOX_MS = 300 };
     struct Track {
         SceneRelations::Item box{0, 0, 0, 0, 0, 0};
-        uint32_t id = 0, seen = 0, lockedAt = 0;
-        bool locked = false;
+        uint32_t id = 0, seen = 0, lockedAt = 0, yoloSeen = 0, templateAt = 0;
+        VisualTracker::Template look{};
+        bool locked = false, visual = false;
     };
-    struct View { SceneRelations::Item box; uint32_t id, trackedMs, missingMs; };
+    struct View { SceneRelations::Item box; uint32_t id, trackedMs, missingMs; bool visual; };
     Track tracks[CAPACITY]{};
     uint32_t nextId = 1, lastFrame = 0;
     bool received = false;
@@ -29,9 +33,9 @@ struct ObjectTracks {
         if (a.type == CLASS_BOOK) return acceptBook(a, items, count);
         if (a.type == CLASS_PHONE) return acceptPhone(a, items, count);
         return (a.type == CLASS_LAPTOP || a.type == CLASS_KEYBOARD || a.type == CLASS_MOUSE) &&
-            a.score >= CONTEXT_MIN_SCORE && inDesk(a);
+            a.score >= CONTEXT_MIN_SCORE && valid(a);
     }
-    // 鎖定後只要同類、分數不太低、沒被別的東西蓋過，離開桌面區也跟著
+    // 鎖定後只要同類、分數不太低、沒被別的東西蓋過，移動位置也跟著
     TRACK_FN static bool kept(SceneRelations::Item a, const SceneRelations::Item *items, unsigned count) {
         using namespace SceneRelations;
         return valid(a) && a.score >= KEEP_MIN_SCORE && !conflicting(a, items, count);
@@ -63,8 +67,29 @@ struct ObjectTracks {
             const uint32_t missing = now - t.seen;
             if ((received && now-lastFrame > STALE_MS) || missing > LOST_MS ||
                 (!t.locked && missing > CONFIRM_MS) ||
-                (t.locked && missing >= EXIT_MS && atEdge(t.box))) t = Track{};
+                (t.locked && missing >= EXIT_MS && atEdge(t.box)) ||
+                now - t.yoloSeen > VISUAL_MAX_MS) t = Track{};
         }
+    }
+    // 每拿到一張灰階小圖呼叫一次：剛被 YOLO 框到就記住樣子，YOLO 漏看就在附近找
+    TRACK_FN unsigned follow(const VisualTracker::Frame &frame, uint32_t now) {
+        unsigned followed = 0;
+        for (auto &t : tracks) {
+            if (!t.id || !t.locked) continue;
+            if (now - t.yoloSeen <= FRESH_BOX_MS) {
+                if (t.templateAt != t.yoloSeen) {
+                    t.look = VisualTracker::capture(frame, t.box);
+                    t.templateAt = t.yoloSeen;
+                }
+                t.visual = false;
+                continue;
+            }
+            const VisualTracker::Match m = VisualTracker::find(frame, t.look, t.box);
+            if (!m.found) continue;
+            t.box = m.box; t.seen = now; t.visual = true; ++followed;
+            if (m.error * 2 <= VisualTracker::MATCH_MAX) VisualTracker::blend(t.look, frame, t.box);
+        }
+        return followed;
     }
     TRACK_FN void lock(Track &t, uint32_t now) {
         if (!t.locked) {t.locked = true; t.lockedAt = now;}
@@ -85,7 +110,7 @@ struct ObjectTracks {
             if (best < 0) continue;
             // 候選再看到一次就確認
             if (!t.locked) lock(t, now);
-            t.box = items[best]; t.seen = now;
+            t.box = items[best]; t.seen = t.yoloSeen = now;
         }
     }
     TRACK_FN void observe(const SceneRelations::Item *items, unsigned count, uint32_t now) {
@@ -104,7 +129,7 @@ struct ObjectTracks {
             for (unsigned i=0; i<CAPACITY; ++i) {
                 Track &t = tracks[i];
                 if (t.id) continue;
-                t = Track{}; t.box=items[j]; t.seen=now; t.id=nextId++;
+                t = Track{}; t.box=items[j]; t.seen=t.yoloSeen=now; t.id=nextId++;
                 if (!nextId) nextId=1;
                 if (items[j].score >= LOCK_NOW_SCORE) lock(t, now);
                 used[i]=(int)j; break;
@@ -117,7 +142,7 @@ struct ObjectTracks {
     }
     TRACK_FN View view(unsigned i, uint32_t now) const {
         const Track &t = tracks[i];
-        return {t.box, t.locked ? t.id : 0, t.locked ? now - t.lockedAt : 0, now - t.seen};
+        return {t.box, t.locked ? t.id : 0, t.locked ? now - t.lockedAt : 0, now - t.seen, t.visual};
     }
 };
 #undef TRACK_FN

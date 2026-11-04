@@ -2,6 +2,7 @@
 #include "WiFi.h"
 #include "PetWebPage.h"
 #include "PetCare.h"
+#include "PetPlan.h"
 extern "C" {
 #include "FreeRTOS.h"
 #include "semphr.h"
@@ -10,7 +11,8 @@ extern "C" {
 // 網路另外跑，不讓慢速瀏覽器卡住辨識
 class PetNetwork {
 public:
-    bool begin(const char *ssid, const char *pass, unsigned long rewardMs) {
+    bool begin(const char *ssid, const char *pass, unsigned long rewardMs, bool demo) {
+        plan = PetPlan(demo);
         networkName = ssid; networkPassword = pass;
         care.goalMs = rewardMs;
         bootTag = micros();
@@ -48,6 +50,15 @@ public:
         xSemaphoreGive(lock);
         return reward;
     }
+    // 主程式每圈呼叫：推進計畫並拿一份副本，網頁改了設定這裡就會看到
+    unsigned updatePlan(unsigned long now, bool learning, PetPlan &copy) {
+        if (!lock) return 0;
+        xSemaphoreTake(lock, portMAX_DELAY);
+        const unsigned events = plan.tick(now, learning);
+        copy = plan;
+        xSemaphoreGive(lock);
+        return events;
+    }
 
 private:
     enum { EVENT_COUNT = 32 };
@@ -58,6 +69,7 @@ private:
     unsigned long sequence = 0, eventId = 0, heartbeat = 0;
     bool seen = false;
     PetCare care{300000};
+    PetPlan plan{false};
     unsigned long bootTag = 0;
     const char *networkName = NULL, *networkPassword = NULL;
 
@@ -71,6 +83,18 @@ private:
             (unsigned long)care.feeds, (unsigned long)(care.learnedMs / 1000),
             (unsigned long)((care.goalMs - care.progressMs + 999) / 1000),
             (unsigned long)(care.goalMs / 1000), (unsigned long)care.lastFeedMs, care.canFeed);
+        return String(line);
+    }
+    // 計畫與允許範圍一起送，網頁照這個範圍做輸入限制
+    String planLine(unsigned long now) {
+        char line[200];
+        snprintf(line, sizeof(line), "PLAN,%lu,%d,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu\n",
+            (unsigned long)plan.revision, (int)plan.phase, (unsigned long)plan.focusS,
+            (unsigned long)plan.restS, (unsigned long)plan.goalS, (unsigned long)plan.purpose,
+            (unsigned long)plan.startsInS(now), (unsigned long)(plan.learnedMs / 1000),
+            (unsigned long)plan.focus.minS, (unsigned long)plan.focus.maxS,
+            (unsigned long)plan.rest.minS, (unsigned long)plan.rest.maxS,
+            (unsigned long)plan.goal.minS, (unsigned long)plan.goal.maxS);
         return String(line);
     }
 
@@ -106,6 +130,7 @@ private:
             body += csv; body += '\n'; body += state; body += '\n'; body += pet; body += '\n';
         }
         body += careLine();
+        body += planLine(millis());
         // 第一次只同步現況，重試才補齊短暫漏收的事件
         if (after >= 0 && (unsigned long)after <= eventId) {
             unsigned long first = (unsigned long)after + 1;
@@ -176,6 +201,23 @@ private:
             const String body = careLine();
             xSemaphoreGive(lock);
             reply(client, accepted ? "200 OK" : "409 Conflict", "text/plain; charset=utf-8", body.c_str(), body.length());
+        } else if (strcmp(method, "POST") == 0 && strncmp(path, "/api/plan?", 10) == 0 && appRequest) {
+            unsigned long f = 0, r = 0, g = 0, p = 0, d = 0;
+            int used = 0;
+            const bool parsed = sscanf(path, "/api/plan?focus=%lu&rest=%lu&goal=%lu&purpose=%lu&delay=%lu%n",
+                                       &f, &r, &g, &p, &d, &used) == 5 && path[used] == 0;
+            xSemaphoreTake(lock, portMAX_DELAY);
+            const unsigned long now = millis();
+            const bool accepted = parsed && plan.set(f, r, g, p, d, now);
+            const String body = planLine(now);
+            xSemaphoreGive(lock);
+            reply(client, accepted ? "200 OK" : "422 Unprocessable Entity", "text/plain; charset=utf-8", body.c_str(), body.length());
+        } else if (strcmp(method, "POST") == 0 && strcmp(path, "/api/plan/stop") == 0 && appRequest) {
+            xSemaphoreTake(lock, portMAX_DELAY);
+            plan.stop();
+            const String body = planLine(millis());
+            xSemaphoreGive(lock);
+            reply(client, "200 OK", "text/plain; charset=utf-8", body.c_str(), body.length());
         } else {
             reply(client, "404 Not Found", "text/plain", "Not found", 9);
         }

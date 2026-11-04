@@ -1,144 +1,284 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f7f5ec"><title>啾啾的小屋 · 一起慢慢長大</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>啾啾的小屋</title>
 <style>
-:root{--paper:#f7f5ec;--ink:#35483d;--muted:#7b8274;--line:#dedfd2;--green:#526e52;--sage:#e7eddf;--yellow:#edbd57;--wood:#e6c99d}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.7 "Microsoft JhengHei","PingFang TC",sans-serif}button,input{font:inherit}button{cursor:pointer;border:1px solid var(--line);background:#fffdf7;color:var(--ink);border-radius:8px;min-height:44px;padding:9px 17px;display:inline-flex;align-items:center;justify-content:center;gap:9px;transition:background .2s,transform .2s}button:hover:not(:disabled){background:var(--sage);transform:translateY(-1px)}button:disabled{opacity:.5;cursor:default}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #9a7526;outline-offset:4px}.primary{background:var(--green);color:white;border-color:var(--green)}.primary:hover:not(:disabled){background:#3d593d}.icon{width:20px;height:20px;display:inline-block;vertical-align:middle;flex:none;image-rendering:pixelated;shape-rendering:crispEdges}main{max-width:1180px;margin:auto;padding:26px 34px 20px;position:relative}.topbar{display:flex;align-items:center;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid var(--line);gap:12px}.brand{display:flex;gap:13px;align-items:center}.brandmark{width:42px;height:42px;background:var(--sage);display:grid;place-items:center;border-radius:10px}.brandmark .icon{width:27px;height:27px}.brand strong{font-size:18px;letter-spacing:2px}.eyebrow{font-size:10px;letter-spacing:2px;color:var(--muted)}.topactions{display:flex;align-items:center;gap:18px}.status{font-size:12px;display:flex;align-items:center;gap:8px}.dot{width:6px;height:6px;border-radius:50%;background:#a8ad9c}.dot.online{background:#68864b}.iconbutton{width:44px;padding:10px}.hero{padding:37px 0 30px;display:flex;justify-content:space-between;align-items:center;gap:20px}h1{font-size:30px;letter-spacing:2px;line-height:1.5;margin:8px 0 9px;font-weight:600}.hero p{color:var(--muted);margin:0;font-size:13px}h2,h3,p{margin-top:0}h2{font-size:15px;letter-spacing:1px;font-weight:600}.roomcard{border:1px solid #cbd1be;border-radius:13px;overflow:hidden;background:#fffdf7;box-shadow:0 5px 0 #e8e8dc}.roomtop{padding:12px 20px;display:flex;justify-content:space-between;align-items:center}.roomtop h2{margin:0;display:flex;align-items:center;gap:9px}.pill{font-size:11px;padding:3px 11px;background:var(--sage);border-radius:5px}.room{position:relative;height:390px;overflow:hidden;background:#e8eddf}.roomscene{width:100%;height:100%;display:block;shape-rendering:crispEdges}.roomnote{position:absolute;left:22px;top:17px;font-size:11px;letter-spacing:1px;color:#78836c}.roomcaption{position:absolute;bottom:12px;left:20px;right:20px;text-align:center;font-size:12px;color:#7b6950;pointer-events:none}.roomfooter{padding:16px 21px;display:flex;align-items:center;justify-content:space-between;gap:15px}.identity{display:flex;align-items:center;gap:12px}.avatar{width:44px;height:44px;background:#f3e9ca;border-radius:8px;padding:5px}.avatar svg{width:100%;height:100%}.identity strong{font-size:14px}.tiny{font-size:11px;color:var(--muted)}.energy{width:185px}.energylabel{display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px}.track{height:6px;border-radius:5px;background:#e9eade;overflow:hidden}.fill{height:100%;width:0;background:#91a374;border-radius:5px;transition:width .8s}.cards{display:grid;grid-template-columns:1fr 1fr 1.14fr;gap:15px;margin-top:26px}.card{border:1px solid var(--line);border-radius:11px;background:#fffdf7;padding:21px 22px;min-width:0}.cardhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.cardhead h2{margin:0}.cardhead>.icon{color:#849477}.metric{font-size:34px;line-height:1.2;letter-spacing:1px;font-variant-numeric:tabular-nums}.metric small{font-size:12px;letter-spacing:0;margin-left:8px;color:var(--muted)}.card p{font-size:12px;color:var(--muted);margin:10px 0}.card .track{margin-top:17px}.cardfoot{font-size:11px;color:var(--muted);margin-top:8px}.pantryrow{display:flex;align-items:center;justify-content:space-between;gap:8px}.feedbutton{margin-top:9px;width:100%;background:#f5e9c9;border-color:#e8d9b1;font-size:12px}.stages{display:flex;justify-content:space-between;gap:4px;margin:19px 0 8px}.stage{text-align:center;opacity:.32;flex:1;font-size:9px}.stage.reached{opacity:1}.stage.current .stageart{background:#f4e7bf;border-color:#d9be79}.stageart{width:38px;height:38px;padding:4px;border:1px solid transparent;border-radius:7px;margin:0 auto 5px}.stageart svg{width:100%;height:100%}.walkway{height:84px;position:relative;display:flex;align-items:end;justify-content:space-between;padding:0 20px 11px;border-bottom:1px dashed var(--line);margin-bottom:24px}.walkway .icon{height:26px;width:26px;color:#9ba786}.bottomcards{display:grid;grid-template-columns:1.25fr 1fr;gap:20px}.journal{padding:5px 4px}.sectionlabel{display:flex;align-items:center;gap:9px;margin-bottom:12px}.diary{list-style:none;padding:0;margin:0}.diary li{display:flex;gap:14px;align-items:baseline;padding:9px 0;border-bottom:1px solid #e8e8dc;font-size:12px}.diary time{color:#929785;font-size:10px;font-variant-numeric:tabular-nums}.restcard{background:var(--sage);border:0;display:flex;gap:18px;align-items:center;padding:25px}.restart{width:54px;flex:none}.restart .icon{width:50px;height:50px;color:#879776}.restcard h2{margin-bottom:7px}.restcard p{margin:0;font-size:12px}.footer{text-align:center;color:#939984;font-size:10px;letter-spacing:2px;padding:28px 0 7px}.wanderer{position:absolute;left:0;top:0;width:78px;height:94px;z-index:4;pointer-events:none;will-change:transform}.petbutton{display:block;min-height:0;padding:0;width:78px;height:78px;border:0;background:transparent!important;pointer-events:auto;outline-offset:0!important}.petbutton:hover{transform:none!important}.petart{display:block;width:100%;height:100%;transform:scaleX(var(--facing,1))}.petart svg{display:block;width:100%;height:100%;overflow:visible;image-rendering:pixelated;shape-rendering:crispEdges}.shadow{position:absolute;bottom:9px;left:15px;width:48px;height:8px;background:#70633a24;border-radius:50%;z-index:-1}.bubble{position:absolute;top:-16px;right:-4px;background:#fffdf4;border:1px solid #d7dccb;border-radius:6px;padding:4px;line-height:0;transition:opacity .2s}.bubble .icon{width:16px;height:16px}.spark{position:absolute;left:-6px;top:20px;color:#c39136;opacity:0}.spark .icon{width:15px;height:15px}.wanderer[data-pose=walk] .petart svg{animation:waddle .35s steps(2) infinite}.wanderer[data-pose=idle] .petart svg{animation:breathe 2.4s steps(3) infinite}.wanderer[data-pose=read] .petart svg{animation:reading 2.8s steps(3) infinite}.wanderer[data-pose=eat] .petart svg{animation:peck .65s steps(3) infinite}.wanderer[data-pose=hop] .petart svg{animation:hop .55s steps(4) infinite}.wanderer[data-pose=hop] .spark{animation:twinkle .7s steps(2) infinite}.wanderer[data-pose=sleep] .petart svg{animation:breathe 3.5s steps(3) infinite;filter:saturate(.7)}.wanderer[data-pose=egg] .petart svg{animation:wobble 4s steps(3) infinite}.wanderer[data-pose=tired] .petart svg{animation:breathe 4s steps(2) infinite;filter:saturate(.65)}.wanderer[data-pose=dead] .petart svg{filter:grayscale(.8);transform:rotate(12deg)}.eyes{animation:blink 5s steps(1) infinite;transform-origin:center 8px}.wanderer[data-pose=sleep] .eyes{animation:none;transform:scaleY(.2)}.wanderer[data-pose=hop] .wing{animation:flap .25s steps(2) infinite;transform-origin:5px 10px}@keyframes waddle{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-3px) rotate(4deg)}}@keyframes breathe{50%{transform:translateY(-2px)}}@keyframes reading{40%,60%{transform:rotate(6deg) translateY(2px)}}@keyframes peck{50%{transform:rotate(14deg) translateY(6px)}}@keyframes hop{50%{transform:translateY(-13px)}}@keyframes twinkle{50%{opacity:1;transform:translateY(-10px)}}@keyframes wobble{8%,16%{transform:rotate(-5deg)}12%,20%{transform:rotate(5deg)}24%,100%{transform:none}}@keyframes blink{0%,94%,98%,100%{transform:scaleY(1)}95%,97%{transform:scaleY(.15)}}@keyframes flap{50%{transform:rotate(-25deg)}}.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;transition:.2s;background:#35483d;color:#fffdf4;padding:12px 22px;border-radius:9px;box-shadow:0 6px 24px #23362b25;z-index:20;font-size:13px;max-width:calc(100% - 30px);pointer-events:none;text-align:center}.toast.visible{opacity:1;transform:translateX(-50%) translateY(0)}dialog{padding:26px;border:1px solid var(--line);border-radius:14px;max-width:410px;width:calc(100% - 32px);color:var(--ink);background:var(--paper)}dialog::backdrop{background:#273a2d66;backdrop-filter:blur(3px)}.dialoghead{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.dialoghead h2{margin:0}dialog p{font-size:13px;color:var(--muted)}.settingrow{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:16px 0;gap:15px}.settingrow span{font-size:13px}input{width:100%;border:1px solid var(--line);background:#fffdf7;border-radius:6px;padding:11px;margin:8px 0 12px;color:var(--ink)}label{font-size:12px}.addressbox[hidden]{display:none}.addressbox button{width:100%}.settingsnote{font-size:11px!important;margin-bottom:0}.closebutton{font-size:12px}.demo-note{font-size:10px;color:#8a7850;margin-top:8px}[hidden]{display:none!important}
-@media(min-width:1400px){main{padding-top:34px}}@media(max-width:700px){main{padding:18px 17px}.brand strong{font-size:15px;letter-spacing:1px}.brand .eyebrow{display:none}.brandmark{width:36px;height:36px}.topactions{gap:10px}.status{font-size:10px}.hero{padding:27px 0 23px;display:block}h1{font-size:24px;letter-spacing:1px}.hero .primary{margin-top:19px;width:100%}.hero p{font-size:12px}.room{height:280px}.roomnote{font-size:9px;left:12px;top:9px}.roomtop{padding:11px 13px}.roomtop h2{font-size:13px}.roomfooter{padding:13px;gap:10px}.energy{width:112px}.avatar{width:37px;height:37px}.identity{gap:8px}.tiny{font-size:10px}.cards{grid-template-columns:1fr 1fr;gap:11px;margin-top:21px}.card{padding:17px 15px}.cards>.card:last-child{grid-column:1/-1}.metric{font-size:28px}.card h2{font-size:13px}.card p,.cardfoot{font-size:10px}.stages{margin:14px 0 4px}.stageart{width:41px;height:41px}.stage{font-size:10px}.bottomcards{grid-template-columns:1fr;gap:20px}.restcard{padding:23px}.wanderer{width:62px;height:78px}.petbutton{width:62px;height:62px}.shadow{width:39px;left:12px}.bubble{top:-17px;right:-2px}.walkway{height:81px}.roomcaption{font-size:10px}.footer{font-size:9px;letter-spacing:1px}}
-.stage{opacity:1;color:#687460}.stage .stageart{opacity:.35}.stage.reached .stageart{opacity:1}.toast{width:max-content}.feedbutton{white-space:nowrap}.cardfoot{line-height:1.8}
-@media(max-width:700px){.card p,.cardfoot{font-size:11px}.feedbutton{font-size:11px;padding:9px 7px}}
-.activitybar{display:flex;align-items:center;gap:16px;padding:16px 22px;border-top:1px solid var(--line);background:#f1f0e7}.activity-symbol .icon{width:34px;height:34px}.activity-copy{flex:1}.activity-copy strong{font-size:19px;letter-spacing:1px}.activity-copy p{margin:2px 0 0;font-size:12px}.activity-copy .track-line{opacity:.8;font-size:11px;min-height:14px}.reward-status{font-size:12px;border:1px solid currentColor;border-radius:5px;padding:5px 10px;white-space:nowrap}.activity-tint{fill:transparent}.context-scene{display:none}.pet-tool{position:absolute;right:-14px;bottom:8px;display:none;line-height:0;padding:5px;background:#fff9df;border:2px solid #a39b76;box-shadow:2px 2px #73653d26}.pet-tool .icon{width:25px;height:25px}.reward-progress{margin-top:8px!important}
-main[data-activity=STUDYING] .activitybar{background:#e2ead3;color:#3e5b35}main[data-activity=STUDYING] .activity-tint{fill:#9db975;opacity:.15}main[data-activity=STUDYING] .scene-study{display:block}main[data-activity=COMPUTER] .activitybar{background:#dbe8ed;color:#365d72}main[data-activity=COMPUTER] .activity-tint{fill:#87b0cb;opacity:.24}main[data-activity=COMPUTER] .scene-computer{display:block}main[data-activity=COMPUTER] .fill{background:#789cad}main[data-activity=PHONE] .activitybar{background:#f4ddbc;color:#805124}main[data-activity=PHONE] .activity-tint{fill:#db9b65;opacity:.23}main[data-activity=PHONE] .scene-phone{display:block}main[data-activity=PHONE] .reward-progress .fill{background:#bd915b}main[data-activity=PHONE] .roomcard{border-color:#c9a072}main[data-activity=PHONE] .pill{background:#f4ddbc;color:#805124}
-.page-flip{animation:turnpage 2.6s steps(2) infinite;transform-origin:574px 319px}.screen-cursor{animation:cursor 1.1s steps(1) infinite}.wanderer[data-pose=read] .pet-tool,.wanderer[data-pose=type] .pet-tool,.wanderer[data-pose=phone] .pet-tool{display:block}.wanderer[data-pose=type] .petart svg{animation:typing .6s steps(2) infinite}.wanderer[data-pose=type] .wing{animation:flap .3s steps(2) infinite;transform-origin:5px 10px}.wanderer[data-pose=phone] .petart svg{animation:phonewait 3s steps(3) infinite}.wanderer[data-pose=phone] .pet-tool{background:#f4ddbc;border-color:#ba8748;color:#805124}@keyframes typing{50%{transform:translateY(3px) rotate(-3deg)}}@keyframes phonewait{50%{transform:rotate(-9deg) translateY(3px)}}@keyframes turnpage{50%{transform:scaleX(-1)}}@keyframes cursor{50%{opacity:0}}
-@media(max-width:700px){.activitybar{padding:12px;gap:10px;flex-wrap:wrap}.activity-symbol .icon{width:26px;height:26px}.activity-copy strong{font-size:16px}.activity-copy p{font-size:11px}.reward-status{font-size:11px;margin-left:36px}.pet-tool .icon{width:19px;height:19px}.pet-tool{right:-12px;padding:3px}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+:root{--bg:#f4eedd;--panel:#fffaf0;--ink:#3a3026;--soft:#7a6a58;--line:#3a3026;--accent:#e8a72e;--green:#6f9a55;--blue:#4f7f9c;--orange:#d9772e;--red:#c0584a;--shadow:#d8cdb4;--chip:#f1e6c8}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Microsoft JhengHei","PingFang TC","Noto Sans TC",system-ui,sans-serif;font-size:15px;line-height:1.5}
+button,input,select{font:inherit;color:inherit}
+.app{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:100vh}
+.life{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;border-right:4px solid var(--line);background:#e9dcc0;overflow:hidden}
+.lifebar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:4px solid var(--line);background:var(--panel)}
+.lifebar h1{margin:0;font-size:18px;letter-spacing:2px;flex:1}
+.dot{width:12px;height:12px;background:#b9ab93;box-shadow:0 0 0 2px var(--line)}
+.dot.online{background:var(--green)}
+.chip{font-size:12px;padding:2px 8px;background:var(--chip);border:2px solid var(--line);white-space:nowrap}
+.stagewrap{position:relative;flex:1;min-height:0}
+#stage{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;cursor:default}
+#stage.palm{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' shape-rendering='crispEdges'%3E%3Cpath d='M10 4h4v12h2V2h4v14h2V4h4v16h-2v4h-2v4H12v-4h-2v-4H8v-4H6v-6h4z' fill='%23f6d2a8' stroke='%233a3026' stroke-width='2'/%3E%3C/svg%3E") 16 16,pointer}
+.lifefoot{padding:10px 14px;border-top:4px solid var(--line);background:var(--panel);display:grid;gap:6px}
+.lifefoot strong{font-size:17px}
+.lifefoot p{margin:0;font-size:13px;color:var(--soft)}
+.bar{height:12px;border:2px solid var(--line);background:#efe5cf;position:relative}
+.bar>i{position:absolute;inset:0 auto 0 0;width:0;background:var(--green);transition:width .4s steps(8)}
+.bar.blue>i{background:var(--blue)}.bar.orange>i{background:var(--orange)}.bar.gold>i{background:var(--accent)}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.panel{padding:18px clamp(14px,3vw,32px) 40px;display:grid;gap:20px;align-content:start;min-width:0}
+.block{background:var(--panel);border:4px solid var(--line);box-shadow:6px 6px 0 var(--shadow);padding:16px;min-width:0}
+.block>h2{margin:0 0 12px;font-size:17px;display:flex;align-items:center;gap:8px;letter-spacing:1px}
+.block>h2 small{font-weight:normal;color:var(--soft);font-size:12px;margin-left:auto}
+.icon{width:20px;height:20px;display:inline-block;flex:none}
+.icon svg{width:100%;height:100%;display:block}
+.actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 8px;background:#fff3d6;border:3px solid var(--line);box-shadow:3px 3px 0 var(--line);cursor:pointer;min-height:48px;text-align:center}
+.btn:hover:not(:disabled){background:#ffe7ad}
+.btn:active:not(:disabled){transform:translate(3px,3px);box-shadow:none}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.on{background:#ffd46b}
+.btn.primary{background:#bfe0a4}.btn.danger{background:#f3c2b7}
+.btn:focus-visible,input:focus-visible,select:focus-visible{outline:3px dashed var(--blue);outline-offset:2px}
+.sub{font-size:13px;color:var(--soft);margin:8px 0 0}
+.toys{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.toys .btn{min-height:40px;font-size:14px;padding:6px}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stat{border:3px solid var(--line);padding:10px;background:#fffdf7;min-width:0}
+.stat span{display:block;font-size:12px;color:var(--soft)}
+.stat b{font-size:22px;font-variant-numeric:tabular-nums;letter-spacing:1px}
+.stat .bar{margin-top:6px}
+.wide{grid-column:1/-1}
+.today{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.today div{border:2px solid var(--line);padding:6px;text-align:center;background:#fffdf7}
+.today span{display:block;font-size:12px;color:var(--soft)}
+.today b{font-variant-numeric:tabular-nums}
+.stages{display:flex;gap:6px;margin-top:10px}
+.stages div{flex:1;border:2px solid var(--line);padding:4px 2px;text-align:center;font-size:11px;background:#fffdf7;opacity:.45}
+.stages div.reached{opacity:1}.stages div.current{background:#ffe7ad}
+.stages canvas{width:32px;height:32px;image-rendering:pixelated;display:block;margin:0 auto}
+form{display:grid;gap:12px}
+fieldset{border:3px solid var(--line);margin:0;padding:10px 12px;min-width:0}
+legend{padding:0 6px;font-weight:bold}
+label.field{display:grid;gap:4px}
+label.field>span{font-size:14px}
+label.field small{color:var(--soft);font-size:12px}
+input[type=number],input[type=time],select{width:100%;padding:8px;border:3px solid var(--line);background:#fff;border-radius:0}
+input[aria-invalid=true]{border-color:var(--red);background:#fff0ec}
+.err{color:var(--red);font-size:12px;min-height:1em}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.radio{display:flex;gap:14px;flex-wrap:wrap}
+.radio label{display:flex;align-items:center;gap:6px}
+.planstate{border:3px dashed var(--line);padding:8px 10px;background:#fffdf7;font-size:14px}
+#eventList{list-style:none;margin:10px 0 0;padding:0;max-height:340px;overflow:auto;border:3px solid var(--line);background:#fffdf7}
+#eventList li{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:6px 10px;border-bottom:2px dashed var(--shadow);font-size:14px}
+#eventList li:last-child{border-bottom:0}
+#eventList time{color:var(--soft);font-variant-numeric:tabular-nums}
+#eventList .empty{display:block;color:var(--soft)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fffaf0;padding:10px 16px;border:3px solid #fffaf0;box-shadow:4px 4px 0 rgba(0,0,0,.3);font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30;max-width:calc(100vw - 32px)}
+.toast.visible{opacity:1}
+.rest{position:fixed;inset:0;z-index:20;background:#25304a;display:flex;flex-direction:column}
+.rest[hidden]{display:none}
+#restStage{flex:1;width:100%;min-height:0;image-rendering:pixelated}
+.restinfo{position:absolute;left:0;right:0;top:24px;text-align:center;color:#fdf3d0;pointer-events:none;padding:0 16px}
+.restinfo strong{display:block;font-size:clamp(20px,4vw,34px);letter-spacing:3px}
+.restinfo span{font-size:clamp(14px,2.4vw,18px)}
+.restclose{position:absolute;right:16px;bottom:16px}
+.demo{font-size:12px;color:var(--orange)}
+.hidden{display:none!important}
+@media (max-width:820px){
+ .app{grid-template-columns:1fr}
+ .life{height:48vh;border-right:0;border-bottom:4px solid var(--line);z-index:5}
+ .lifefoot{padding:6px 12px;gap:4px}
+ .lifefoot p{display:none}
+ .actions{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .btn{font-size:14px;padding:8px 4px}
+}
+@media (max-width:420px){.grid2,.stats{grid-template-columns:1fr}.today{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (prefers-reduced-motion:reduce){.bar>i{transition:none}}
 </style>
 </head>
 <body>
-<main id="home">
- <header class="topbar"><div class="brand"><div class="brandmark" data-icon="home"></div><div><strong>啾啾的小屋</strong><div class="eyebrow">A LITTLE HOME, A LITTLE GROWTH</div></div></div><div class="topactions"><span class="status"><i class="dot" id="connectionDot"></i><span id="connectionLabel">等你回家</span></span><button class="iconbutton" id="settingsButton" aria-label="小屋設定" data-icon="gear"></button></div></header>
- <section class="hero"><div><div class="eyebrow">HOME SWEET HOME</div><h1>一起，把日子慢慢養大。</h1><p>你讀一點書，啾啾長大一點。累了，就一起休息。</p></div><button class="primary" id="connectButton"><span data-icon="leaf"></span><span id="connectLabel">開始陪伴</span></button></section>
- <section class="roomcard" aria-label="小雞的家"><div class="roomtop"><h2><span data-icon="sun"></span>啾啾的房間</h2><span class="pill" id="activityLabel">準備迎接新的一天</span></div>
- <div class="activitybar" role="status" aria-live="polite"><span class="activity-symbol" id="activityIcon"></span><div class="activity-copy"><strong id="activityTitle">等你開始陪伴</strong><p id="activityDescription">翻開書，或準備好電腦，小屋會跟著你改變。</p><p class="track-line" id="trackLine"></p></div><span class="reward-status" id="rewardStatus">獎勵等待中</span></div>
- <div class="room" id="room"><svg class="roomscene" viewBox="0 0 960 420" preserveAspectRatio="none" aria-hidden="true">
- <defs><pattern id="wall" width="48" height="48" patternUnits="userSpaceOnUse"><rect width="48" height="48" fill="#e5ebdc"/><rect width="2" height="48" fill="#dce4d2"/></pattern><pattern id="floor" width="170" height="48" patternUnits="userSpaceOnUse"><rect width="170" height="48" fill="#e5c99e"/><path d="M0 0H170M0 1V48M40 30H90M110 15H140" stroke="#cfb289" stroke-width="2"/></pattern></defs>
- <rect width="960" height="280" fill="url(#wall)"/><rect y="280" width="960" height="140" fill="url(#floor)"/><rect y="272" width="960" height="10" fill="#ad9773"/><rect y="272" width="960" height="3" fill="#d0ba92"/>
- <rect class="activity-tint" width="960" height="272"/>
- <rect x="338" y="33" width="280" height="195" fill="#d7deca"/><rect x="344" y="29" width="268" height="188" fill="#ad9874"/><rect x="353" y="38" width="250" height="170" fill="#d4e6de"/><rect x="541" y="53" width="23" height="23" fill="#f5d779"/><path d="M371 86h15v-7h28v7h14v9h-57zM504 116h15v-8h34v8h17v9h-66z" fill="#f9f9e9"/><path d="M353 183h28v-14h32v-17h26v15h32v16h25v-13h35v-13h26v15h31v12h15v24H353z" fill="#a5bc91"/><rect x="353" y="198" width="250" height="10" fill="#8aa679"/><path d="M474 38h9v170h-9zM353 131h250v8H353z" fill="#c2ad86"/><rect x="334" y="212" width="289" height="10" fill="#a28a66"/><path d="M322 24h27v105h-9v60h-18zM608 24h27v165h-18v-60h-9z" fill="#faf4dc"/><path d="M326 24h5v158h-5zM624 24h5v158h-5z" fill="#e6dbba"/>
- <rect x="88" y="75" width="91" height="84" fill="#b7a17d"/><rect x="95" y="82" width="77" height="70" fill="#f9f2db"/><path d="M117 125h13v-17h13v-13h9v30h9v10h-44z" fill="#9dac83"/><rect x="107" y="96" width="12" height="12" fill="#e4bf66"/>
- <rect x="109" y="228" width="194" height="70" fill="#bc9b6e"/><rect x="99" y="214" width="217" height="14" fill="#9e815a"/><rect x="99" y="211" width="217" height="5" fill="#ceb284"/><rect x="114" y="228" width="13" height="108" fill="#9e815a"/><rect x="284" y="228" width="13" height="108" fill="#9e815a"/><rect x="122" y="238" width="170" height="39" fill="#d6b586"/><rect x="197" y="251" width="19" height="5" fill="#9e815a"/>
- <rect x="124" y="201" width="50" height="9" fill="#87987c"/><rect x="127" y="194" width="43" height="7" fill="#f4e6c2"/><rect x="125" y="190" width="47" height="5" fill="#b7835d"/><rect x="249" y="173" width="5" height="38" fill="#64785e"/><path d="M233 154h36v11h7v11h-50v-11h7z" fill="#8fa582"/><rect x="239" y="208" width="26" height="4" fill="#64785e"/><rect x="197" y="192" width="17" height="19" fill="#eee8d5"/><path d="M214 196h7v10h-7" fill="none" stroke="#eee8d5" stroke-width="4"/>
- <rect x="185" y="274" width="53" height="49" fill="#91a07b"/><rect x="179" y="318" width="65" height="11" fill="#758963"/><path d="M185 329h7v32h-7zM231 329h7v32h-7z" fill="#9e815a"/>
- <rect x="740" y="81" width="145" height="9" fill="#a28a66"/><rect x="750" y="39" width="13" height="42" fill="#94a17f"/><rect x="765" y="46" width="16" height="35" fill="#bd946c"/><rect x="783" y="36" width="11" height="45" fill="#dfcd9e"/><rect x="797" y="42" width="12" height="39" fill="#829082"/><rect x="842" y="62" width="23" height="19" fill="#b39670"/><path d="M851 62V39h-14v-9h14v9h15v10h-10v13z" fill="#849c70"/>
- <rect x="760" y="131" width="86" height="67" fill="#c1af8d"/><rect x="766" y="137" width="74" height="55" fill="#f9f2df"/><path d="M787 154h28v5h5v20h-38v-20h5z" fill="#dfba5b"/><rect x="791" y="161" width="4" height="4" fill="#725f3f"/><rect x="811" y="161" width="4" height="4" fill="#725f3f"/><rect x="802" y="168" width="8" height="4" fill="#c48d43"/>
- <rect x="713" y="283" width="150" height="47" fill="#ad936e"/><rect x="704" y="273" width="168" height="32" fill="#bdab83"/><rect x="713" y="267" width="150" height="30" fill="#eff0dc"/><rect x="755" y="271" width="103" height="29" fill="#9daa84"/><path d="M769 272v27m22-27v27m22-27v27m22-27v27" stroke="#b6c29f" stroke-width="3"/><rect x="719" y="263" width="37" height="20" fill="#faf4df"/><rect x="709" y="255" width="8" height="81" fill="#a98d65"/><rect x="859" y="275" width="8" height="61" fill="#a98d65"/>
- <path d="M895 287h37l-5 45h-27z" fill="#ba9872"/><rect x="891" y="282" width="44" height="9" fill="#a98761"/><path d="M912 282v-61h-19v-18h14v9h5v-26h10v37h14v-15h9v26h-23v48z" fill="#7e9669"/><rect x="904" y="242" width="10" height="26" fill="#9daf81"/>
- <path d="M354 325h257v7h18v38h-18v7H354v-7h-18v-38h18z" fill="#d3d5ad"/><path d="M360 332h245v7h14v24h-14v7H360v-7h-14v-24h14z" fill="#b9c39d"/><path d="M373 338h222M373 363h222" stroke="#dce0ba" stroke-width="3"/>
- <rect x="652" y="352" width="54" height="7" fill="#bca075"/><path d="M657 340h44v13h-5v4h-34v-4h-5z" fill="#96a082"/><rect x="657" y="338" width="44" height="6" fill="#6e8066"/><path d="M667 337h5v5h-5zM679 336h5v5h-5zM689 338h5v4h-5z" fill="#e3bc65"/>
- <g class="context-scene scene-study"><path d="M511 298h58v7h14v-7h57v62h-57v6h-14v-6h-58z" fill="#8b9b69"/><path d="M517 292h46v6h11v57h-11v-5h-46zM579 298h11v-6h44v58h-44v5h-11z" fill="#fff5d7"/><path d="M525 307h29v4h-29zM525 318h33v4h-33zM525 329h22v4h-22zM592 307h31v4h-31zM592 318h25v4h-25zM592 329h31v4h-31z" fill="#b9b18e"/><path class="page-flip" d="M574 299h27v46h-27z" fill="#e7ddba"/><rect x="576" y="298" width="4" height="56" fill="#b0a575"/></g>
- <g class="context-scene scene-computer"><rect x="515" y="267" width="124" height="84" fill="#516b78"/><rect x="522" y="274" width="110" height="68" fill="#c7dfe4"/><path d="M532 285h56v5h-56zM532 298h33v5h-33zM532 311h70v5h-70z" fill="#6f99a6"/><rect class="screen-cursor" x="606" y="311" width="7" height="5" fill="#416b80"/><path d="M509 351h136v9h7v7H502v-7h7z" fill="#879eaa"/><path d="M525 355h103v4H525z" fill="#526f7e"/><rect x="566" y="361" width="23" height="4" fill="#bdcfd2"/></g>
- <g class="context-scene scene-phone"><path d="M544 259h48v6h6v92h-6v6h-48v-6h-6v-92h6z" fill="#8d684a"/><rect x="544" y="273" width="48" height="70" fill="#eed1a0"/><rect x="559" y="265" width="19" height="4" fill="#d6ae77"/><rect x="564" y="349" width="10" height="7" fill="#d6ae77"/><path d="M554 289h10v36h-10zM574 289h10v36h-10z" fill="#a9753c"/><path d="M618 310h10v33h-10zM636 310h10v33h-10z" fill="#b78140"/></g>
- </svg><div class="roomnote">留一點時間，陪自己也陪啾啾。</div><div class="roomcaption" id="roomCaption">小屋已經準備好了，等你一起開始。</div></div>
- <div class="roomfooter"><div class="identity"><div class="avatar" id="avatar"></div><div><strong>啾啾</strong><div class="tiny" id="petIdentity">一顆小小的期待</div></div></div><div class="energy"><div class="energylabel"><span>今日活力</span><span id="energyLabel">等待陪伴</span></div><div class="track"><div class="fill" id="energyFill"></div></div></div></div></section>
- <section class="cards" aria-label="陪伴與成長"><article class="card"><div class="cardhead"><h2>這一輪的陪伴</h2><span data-icon="book"></span></div><div class="metric" id="sessionTime">00:00</div><p id="sessionHint">坐好，翻開書，慢慢開始。</p><div class="track"><div class="fill" id="sessionFill"></div></div><div class="cardfoot" id="sessionFoot">記得留一點時間休息</div></article>
- <article class="card"><div class="cardhead"><h2>啾啾的糧倉</h2><span data-icon="seed"></span></div><div class="pantryrow"><div class="metric"><span id="foodCount">0</span><small>份穀穀</small></div><span data-icon="bowl"></span></div><p id="rewardHint">每認真學習 5 分鐘，收穫 1 份。</p><div class="track reward-progress" id="rewardProgress" role="progressbar" aria-label="下一份穀穀的學習進度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="fill" id="rewardFill"></div></div><button class="feedbutton" id="feedButton" disabled><span data-icon="seed"></span><span id="feedLabel">餵啾啾吃穀穀</span></button><div class="cardfoot" id="feedHint">一起學習，收集第一份穀穀。</div></article>
- <article class="card"><div class="cardhead"><h2>慢慢長大的足跡</h2><span data-icon="leaf"></span></div><div class="stages" id="growthStages"></div><p id="growthHint">每一次陪伴，都是長大的養分。</p><div class="cardfoot">餵食 +1 成長 · 完整學習與休息 +2 成長</div></article></section>
- <div class="walkway" id="walkway" aria-hidden="true"><span data-icon="plant"></span><span data-icon="plant"></span></div>
- <section class="bottomcards"><article class="journal"><h2 class="sectionlabel"><span data-icon="spark"></span>小屋日記</h2><ul class="diary" id="diary"><li><time>今天</time><span>故事還沒開始，先找個舒服的位置吧。</span></li></ul></article><article class="card restcard"><div class="restart" data-icon="moon"></div><div><h2>休息，也是一種進步。</h2><p id="restHint">時間到了，啾啾會輕輕叫你。離開桌前走一走，回來再一起努力。</p><div class="demo-note" id="demoNote" hidden>目前是短時間體驗，獎勵與休息會比較快到來。</div></div></article></section>
- <footer class="footer">一點專注，一點休息，一間屬於你們的小屋。</footer>
- <div class="wanderer" id="wanderer" data-pose="egg"><div class="bubble" id="petBubble"></div><span class="spark" data-icon="spark"></span><button class="petbutton" id="petButton" aria-label="摸摸啾啾"><span class="petart" id="petArt"></span></button><div class="pet-tool" id="petTool" aria-hidden="true"></div><div class="shadow"></div></div>
-</main>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
-<dialog id="settings"><div class="dialoghead"><h2>小屋設定</h2><button class="closebutton" id="closeSettings">完成</button></div><p>讓 Ameba 和這台裝置連上同一個 Wi-Fi，打開小屋，就能一起學習。</p><div class="settingrow"><span>休息提醒聲音</span><button id="soundButton" aria-pressed="true">已開啟</button></div><div class="settingrow"><span id="settingsConnection">還沒開始陪伴</span><button id="disconnectButton" disabled>暫停陪伴</button></div><div class="addressbox" id="addressBox" hidden><label for="homeAddress">小屋位址</label><input id="homeAddress" placeholder="例如 192.168.1.88" inputmode="url" autocomplete="off" spellcheck="false"><button class="primary" id="openHome">前往小屋</button><p>輸入 Ameba 的 Wi-Fi 位址，從小屋開啟陪伴。</p></div><p class="settingsnote">穀穀與成長由小屋記住；網頁重新開啟會讀回，Ameba 斷電後則開始新的故事。餵食不會代替休息。</p></dialog>
+<div class="app">
+ <section class="life" id="life" aria-label="小雞生活區">
+  <div class="lifebar"><span class="dot" id="connectionDot"></span><h1>啾啾的小屋</h1><span class="chip" id="modeChip">準備中</span></div>
+  <div class="stagewrap"><canvas id="stage" role="img" aria-label="像素小雞的房間"></canvas></div>
+  <div class="lifefoot" role="status" aria-live="polite">
+   <div class="row"><strong id="activityTitle">等你設定計畫</strong><span class="chip" id="rewardStatus">獎勵等待中</span></div>
+   <p id="activityDescription">在右邊設定目的、時間、專注間隔與休息時間，就能開始。</p>
+   <p id="trackLine"></p>
+   <div class="row" style="flex-wrap:nowrap"><span style="font-size:12px;white-space:nowrap">活力</span><div class="bar" style="flex:1"><i id="energyFill"></i></div><span id="energyLabel" style="font-size:12px;min-width:3em;text-align:right">--</span></div>
+  </div>
+ </section>
+
+ <main class="panel" id="panel">
+  <section class="block" aria-labelledby="playTitle">
+   <h2 id="playTitle"><span class="icon" data-icon="palm"></span>和啾啾互動<small id="growthName">一顆小小的期待</small></h2>
+   <div class="actions">
+    <button class="btn" id="palmButton" type="button" aria-pressed="false"><span class="icon" data-icon="palm"></span>摸摸</button>
+    <button class="btn" id="feedButton" type="button"><span class="icon" data-icon="seed"></span><span id="feedLabel">餵食</span></button>
+    <button class="btn" id="toyButton" type="button" aria-expanded="false"><span class="icon" data-icon="ball"></span>玩具</button>
+   </div>
+   <div class="toys hidden" id="toys">
+    <button class="btn" type="button" data-toy="ball"><span class="icon" data-icon="ball"></span>小球</button>
+    <button class="btn" type="button" data-toy="feather"><span class="icon" data-icon="feather"></span>羽毛</button>
+    <button class="btn" type="button" data-toy="blocks"><span class="icon" data-icon="blocks"></span>積木</button>
+   </div>
+   <p class="sub" id="feedHint">開始計畫後，認真學習就能收集穀穀。</p>
+   <div class="row" style="margin-top:8px"><span class="icon" data-icon="seed"></span><b><span id="foodCount">0</span> 份穀穀</b><div class="bar gold" style="flex:1;min-width:120px" id="rewardProgress" role="progressbar" aria-label="下一份穀穀" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="rewardFill"></i></div></div>
+   <p class="sub" id="rewardHint">讀書或電腦學習才會累積。</p>
+   <div class="stages" id="growthStages"></div>
+  </section>
+
+  <section class="block" aria-labelledby="recordTitle">
+   <h2 id="recordTitle"><span class="icon" data-icon="clock"></span>紀錄與時間<small class="demo" id="demoNote" hidden>展示版：時間已縮短</small></h2>
+   <div class="planstate" id="planSummary">還沒有學習計畫。</div>
+   <div class="stats" style="margin-top:10px">
+    <div class="stat wide"><span>總目標進度（有效學習）</span><b id="goalTime">00:00 / 00:00</b><div class="bar gold"><i id="goalFill"></i></div></div>
+    <div class="stat"><span id="sessionLabel">這一輪專注</span><b id="sessionTime">00:00</b><div class="bar" id="sessionBar"><i id="sessionFill"></i></div><span id="sessionFoot">設定後開始計時</span></div>
+    <div class="stat"><span>休息</span><b id="restTime">00:00</b><div class="bar blue"><i id="restFill"></i></div><span id="restFoot">離開桌前就開始休息</span></div>
+   </div>
+   <div class="today" aria-label="開機以來的統計">
+    <div><span>在桌前</span><b id="statDesk">00:00</b></div>
+    <div><span>讀書</span><b id="statStudy">00:00</b></div>
+    <div><span>電腦</span><b id="statComputer">00:00</b></div>
+    <div><span>手機出現</span><b id="statPhone">00:00</b></div>
+    <div><span>完成休息</span><b id="statRests">0</b></div>
+    <div><span>休息提醒</span><b id="statReminders">0</b></div>
+   </div>
+  </section>
+
+  <section class="block" aria-labelledby="setTitle">
+   <h2 id="setTitle"><span class="icon" data-icon="gear"></span>設定與事件紀錄</h2>
+   <form id="planForm" novalidate>
+    <fieldset>
+     <legend>學習計畫（必填）</legend>
+     <div class="grid2">
+      <label class="field"><span>目的</span><select id="purpose"><option value="0">讀書</option><option value="1">電腦作業</option><option value="2">讀書＋電腦</option></select></label>
+      <label class="field"><span>總目標時間（<span class="unit">分鐘</span>）</span><input id="goalInput" type="number" inputmode="numeric" required><small id="goalRange"></small><span class="err" id="goalErr"></span></label>
+      <label class="field"><span>專注間隔（<span class="unit">分鐘</span>）</span><input id="focusInput" type="number" inputmode="numeric" required><small id="focusRange"></small><span class="err" id="focusErr"></span></label>
+      <label class="field"><span>休息時間（<span class="unit">分鐘</span>）</span><input id="restInput" type="number" inputmode="numeric" required><small id="restRange"></small><span class="err" id="restErr"></span></label>
+     </div>
+     <div style="margin-top:10px"><span style="font-size:14px">開始</span>
+      <div class="radio"><label><input type="radio" name="startMode" value="now" checked>立即開始</label><label><input type="radio" name="startMode" value="at">指定時間</label><input id="startAt" type="time" style="width:auto" disabled></div>
+      <span class="err" id="startErr"></span>
+     </div>
+    </fieldset>
+    <div class="actions" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+     <button class="btn primary" id="startButton" type="submit"><span class="icon" data-icon="play"></span>開始計畫</button>
+     <button class="btn danger" id="stopButton" type="button"><span class="icon" data-icon="stop"></span>結束計畫</button>
+    </div>
+    <p class="sub" id="formHint">等待小屋回應…</p>
+   </form>
+   <div class="row" style="margin-top:14px">
+    <button class="btn" id="soundButton" type="button" aria-pressed="true"><span class="icon" data-icon="sound"></span><span id="soundLabel">叫聲：開</span></button>
+    <button class="btn" id="exportButton" type="button"><span class="icon" data-icon="download"></span>匯出紀錄</button>
+    <button class="btn" id="connectButton" type="button"><span class="icon" data-icon="play"></span><span id="connectLabel">重新連線</span></button>
+   </div>
+   <div class="row hidden" id="addressBox" style="margin-top:10px"><input id="homeAddress" placeholder="小屋位址，例如 192.168.1.88" style="flex:1;padding:8px;border:3px solid var(--line)"><button class="btn" id="openHome" type="button">前往</button></div>
+   <h3 style="margin:16px 0 0;font-size:15px">每次事件</h3>
+   <ol id="eventList"><li class="empty">還沒有事件。</li></ol>
+  </section>
+ </main>
+</div>
+
+<div class="rest" id="restOverlay" hidden>
+ <canvas id="restStage" aria-hidden="true"></canvas>
+ <div class="restinfo"><strong>休息中</strong><span id="restOverlayText">離開桌前走一走</span></div>
+ <button class="btn restclose" id="restClose" type="button">縮小畫面</button>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
 <script>
 'use strict';
-const $ = id => document.getElementById(id);
-const ICONS = {
- home:['...##...','..####..','.######.','########','.######.','.##..##.','.##..##.','.######.'],
- gear:['..#..#..','.######.','########','.##..##.','.##..##.','########','.######.','..#..#..'],
- sun:['...##...','.#.##.#.','..####..','########','########','..####..','.#.##.#.','...##...'],
- book:['####.###','#..###.#','#..###.#','#..###.#','#..###.#','#..###.#','####.###','...#.#..'],
- laptop:['.######.','.#....#.','.#.##.#.','.#....#.','.######.','........','########','.######.'],
- phone:['..####..','..#..#..','..#..#..','..#..#..','..#..#..','..####..','..#..#..','..####..'],
- seed:['.....##.','....###.','..####..','.####...','###.##..','##..#...','...##...','........'],
- bowl:['........','..#.#...','.#.#.#..','########','#......#','.######.','..####..','........'],
- leaf:['.....###','...#####','..######','.#######','.######.','#####...','###.....','#.......'],
- moon:['...###..','..##....','.##.....','.##.....','.##...#.','.###.##.','..####..','...##...'],
- heart:['.##..##.','########','########','########','.######.','..####..','...##...','........'],
- spark:['...#....','...#..#.','..###...','#######.','..###...','...#....','.#.#....','........'],
- pause:['........','.##..##.','.##..##.','.##..##.','.##..##.','.##..##.','........','........'],
- sleep:['.######.','.....##.','....##..','...##...','..##....','.######.','........','........'],
- plant:['...##...','.####...','.#####..','...####.','...##...','.######.','..####..','..####..']
+const $=id=>document.getElementById(id);
+// ── 像素圖示：8×8，每個字代表一格顏色 ──
+const IC={'#':'#3a3026','y':'#f7cf4a','o':'#e8772e','g':'#6f9a55','b':'#4f7f9c','r':'#c0584a','w':'#ffffff','s':'#f6d2a8','p':'#e7c08a'};
+const ICONS={
+ palm:['.s.s.s..','.s.s.s..','.s.s.s.s','.sssss.s','.ssssss.','.sssss..','..ssss..','..ssss..'],
+ seed:['........','...yy...','..yyyy..','.yyoyyy.','.yyyyyy.','..yyyy..','...yy...','........'],
+ ball:['..rrrr..','.rrwrrr.','rrwrrrrr','rrrrrrrr','wwwwwwww','rrrrrrrr','.rrrrrr.','..rrrr..'],
+ feather:['......bb','.....bbb','....bbb.','...bbb..','..bbb...','.bbb....','.#......','#.......'],
+ blocks:['........','.rr.....','.rr.bb..','....bb..','.yyyy...','.yyyy...','gggggg..','gggggg..'],
+ clock:['..####..','.#wwww#.','#ww#www#','#ww#www#','#ww###w#','#wwwwww#','.#wwww#.','..####..'],
+ gear:['...##...','.#.##.#.','..####..','###ww###','###ww###','..####..','.#.##.#.','...##...'],
+ play:['.#......','.##.....','.###....','.####...','.####...','.###....','.##.....','.#......'],
+ stop:['........','.######.','.######.','.######.','.######.','.######.','.######.','........'],
+ sound:['...#....','..##..#.','####.#..','####..#.','####.#..','..##..#.','...#....','........'],
+ download:['...##...','...##...','...##...','.######.','..####..','...##...','#......#','########']
 };
-function icon(name) { return '<svg class="icon" viewBox="0 0 8 8" aria-hidden="true">' + (ICONS[name] || ICONS.spark).flatMap((r,y)=>[...r].map((v,x)=>v==='#'?`<rect x="${x}" y="${y}" width="1" height="1" fill="currentColor"/>`:'')).join('') + '</svg>'; }
-document.querySelectorAll('[data-icon]').forEach(e=>e.innerHTML=icon(e.dataset.icon));
-const GROWTH = [ ['小小的蛋',0], ['小絨球',0], ['小探險家',3], ['陪讀夥伴',8], ['小屋守護者',16] ];
-const PALETTE = { o:'#715d3d', y:'#edc45e', l:'#f6dc87', b:'#d9973d', c:'#e9ae68', w:'#fff5d9', g:'#81966c', d:'#607854' };
-function chick(stage) {
- const egg=['................','................','......oooo......','.....owwwwo.....','....owwwwwwo....','....owwwwwwo....','...owwwwwwwwo...','...owwwwwwwwo...','...owwwwcwwwo...','...owwwcwwwwo...','...owwwwwwwwo...','....owwwwwwo....','.....oooooo.....','................','................','................'];
- const body=['................','......yy........','.....oyyo.......','....oyyyyoo.....','...oyyyyyyyo....','..oyyllllyyyo...','..oyyllllyyyo...','..oyyyyyyyyyo...','..oyyyyyyyyyo...','..oyyyybbyyyo...','...oyyyyyyyo....','...oyyyyyyyo....','....oyyyyyo.....','.....ooooo......','.....b..b.......','....bb..bb......'];
- const rows = stage ? body : egg;
- let art=rows.flatMap((r,y)=>[...r].map((v,x)=>PALETTE[v]?`<rect x="${x}" y="${y}" width="1" height="1" fill="${PALETTE[v]}"/>`:'')).join('');
- if(stage){
-  art+='<g class="eyes" fill="#574c36"><rect x="5" y="7" width="1" height="2"/><rect x="10" y="7" width="1" height="2"/></g><g fill="#e7a273"><rect x="4" y="9" width="2" height="1"/><rect x="10" y="9" width="2" height="1"/></g><g class="wing" fill="#d8aa47"><rect x="3" y="10" width="2" height="2"/><rect x="4" y="12" width="1" height="1"/></g>';
-  if(stage===1)art+='<path d="M4 12h2v1h2v-1h2v1h2v2H4z" fill="#fff5d9"/>';
-  if(stage>=3)art+='<path d="M4 11h8v1H9v2H7v-2H4z" fill="#6e8963"/>';
-  if(stage===4)art+='<path d="M5 1h1v1h1V0h2v2h1V1h1v3H5z" fill="#ba8b33"/><rect x="6" y="3" width="4" height="1" fill="#ffdf80"/>';
- }
- return `<svg viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">${art}</svg>`;
-}
-const STATES = {UNKNOWN:'正在找你的位置',UNSURE:'正在找你的位置',PRESENT:'在桌前陪伴',STUDYING:'一起認真讀書',COMPUTER:'電腦學習中',PHONE:'手機出現 · 獎勵暫停',AWAY:'休息一下，等等見'};
-const ACTIVITIES = {
- STUDYING:['book','翻書時間','啾啾陪你翻頁，讀書時間正在累積穀穀。','穀穀累積中'],
- COMPUTER:['laptop','電腦學習時間','啾啾打開電腦，陪你查資料、寫作業。','穀穀累積中'],
- PHONE:['phone','手機出現，穀穀先等等','學習獎勵暫停，先前進度保留；在座與休息提醒仍繼續。','獎勵已暫停'],
- PRESENT:['heart','先坐好，準備一下','找到書本或電腦後，才會開始累積學習獎勵。','獎勵等待中'],
- AWAY:['moon','離開桌前，休息一下','啾啾也打個盹，休息好了再一起努力。','休息中'],
- READY:['home','等你開始陪伴','翻開書，或準備好電腦，小屋會跟著你改變。','獎勵等待中'],
- PAUSED:['pause','暫停一下，等你回來','暫時看不清楚或連線中斷，學習進度先保留。','獎勵已暫停'],
- DEAD:['moon','先好好休息，再迎接新生命','完成休息後，啾啾的小屋會迎來新的蛋。','獎勵已暫停']
+function icon(name){const m=ICONS[name];if(!m)return '';let r='';m.forEach((row,y)=>[...row].forEach((c,x)=>{if(IC[c])r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${IC[c]}"/>`;}));return `<svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;}
+document.querySelectorAll('[data-icon]').forEach(e=>{e.innerHTML=icon(e.dataset.icon);});
+
+// ── 板子資料 ──
+const STATES={UNKNOWN:'正在找你的位置',UNSURE:'正在找你的位置',PRESENT:'在桌前陪伴',STUDYING:'一起認真讀書',COMPUTER:'電腦學習中',PHONE:'手機出現 · 獎勵暫停',AWAY:'休息一下，等等見'};
+const ACTIVITIES={
+ STUDYING:['戴上眼鏡一起讀書','啾啾戴好眼鏡翻書，讀書時間正在累積穀穀。','穀穀累積中'],
+ COMPUTER:['電腦學習時間','啾啾在電腦前打字，陪你查資料、寫作業。','穀穀累積中'],
+ PHONE:['手機出現，穀穀先等等','學習獎勵暫停、進度保留，在座與休息提醒仍繼續。','獎勵已暫停'],
+ PRESENT:['先坐好，準備一下','找到書本或電腦後，才會開始累積學習獎勵。','獎勵等待中'],
+ AWAY:['離開桌前，休息一下','啾啾也去睡一下，休息好了再一起努力。','休息中'],
+ NOPLAN:['等你設定計畫','在右邊設定目的、時間、專注間隔與休息時間，就能開始。','獎勵等待中'],
+ WAITING:['計畫快開始了','時間到了啾啾就會醒來陪你。','等待開始'],
+ READY:['等小屋回應','正在連到 Ameba，請確認在同一個 Wi-Fi。','獎勵等待中'],
+ PAUSED:['暫停一下，等你回來','暫時看不清楚或連線中斷，學習進度先保留。','獎勵已暫停'],
+ DEAD:['先好好休息，再迎接新生命','離開桌前完成一次休息，小屋會迎來新的蛋。','獎勵已暫停']
 };
-let current={state:'UNKNOWN'}, life=null, care=null, stage=-1, lastSnapshotAt=0;
-let networkEnabled=false, networkTask=null, networkAbort=null, epoch=0, lastSequence=-1, lastBoardMs=-1, eventCursor=-1, suppressSound=true;
-let soundEnabled=true, audio=null, feedBusy=false, feedAbort=null, toastUntil=0, celebrateUntil=0, eatUntil=0;
-let petPose='', bubbleName='', activityMode='', memories=[], eventIds=new Set();
+const EVENTS={WELCOME:'你回到桌前，啾啾也準備好了。',LEAVE:'離開桌前，伸個懶腰。',REMIND:'專注時間到，帶啾啾休息一下吧。',WEAK:'啾啾有點累了，這次真的要休息囉。',DIED:'啾啾累倒了。完成休息後，會迎來新的蛋。',RESTED:'好好休息過，重新充滿活力。',REBORN:'一顆新的蛋，等你一起慢慢養大。',PLAN_SET:'小屋收到新的學習計畫。',PLAN_START:'計畫開始，啾啾陪你專心。',GOAL:'達成這次的總目標時間！',NOISY:'周圍有點熱鬧。',QUIET:'環境又安靜下來了。'};
+const PURPOSES=['讀書','電腦作業','讀書＋電腦'];
+const GROWTH=[['小小的蛋',0],['小絨球',1],['小探險家',3],['陪讀夥伴',8],['小屋守護者',16]];
+const TRACK_NAMES={book:'書本',phone:'手機',laptop:'筆電',keyboard:'鍵盤',mouse:'滑鼠'};
+let current={state:'UNKNOWN',desk:0,study:0,computer:0,tracks:[]},life=null,care=null,plan=null,lastSnapshotAt=0;
+let networkEnabled=false,networkTask=null,networkAbort=null,epoch=0,lastSequence=-1,lastBoardMs=-1,eventCursor=-1,suppressSound=true;
+let soundEnabled=true,audio=null,feedBusy=false,feedAbort=null,planBusy=false,toastUntil=0,celebrateUntil=0,eatUntil=0,petUntil=0;
+let memories=[],eventIds=new Set(),stage=-1,phoneSeconds=0,palmMode=false,toy=null,restDismissed=false,formTouched=false;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
-const motion={x:0,y:0,tx:0,ty:0,ready:false,next:0,last:0,facing:1};
-function fmt(s){s=Math.max(0,Math.floor(s||0));return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;}
-function fresh(){return networkEnabled && life && Date.now()-lastSnapshotAt<=3000 && !life.paused;}
-function toast(text){$('toast').textContent=text;toastUntil=Date.now()+4000;$('toast').classList.add('visible');}
-function remember(text){memories.unshift({at:new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',hour12:false}),text});memories=memories.slice(0,5);$('diary').replaceChildren(...memories.map(m=>{const li=document.createElement('li'),time=document.createElement('time'),span=document.createElement('span');time.textContent=m.at;span.textContent=m.text;li.append(time,span);return li;}));}
+function fmt(s){s=Math.max(0,Math.floor(s||0));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return (h?h+':'+String(m).padStart(2,'0'):String(m).padStart(2,'0'))+':'+String(x).padStart(2,'0');}
+function fresh(){return networkEnabled&&life&&Date.now()-lastSnapshotAt<=3000&&!life.paused;}
+function connected(){return networkEnabled&&life&&Date.now()-lastSnapshotAt<=3000;}
+function toast(text){$('toast').textContent=text;toastUntil=Date.now()+3500;$('toast').classList.add('visible');}
+function remember(text){
+ memories.unshift({at:new Date(),text});memories=memories.slice(0,300);
+ const list=$('eventList');list.replaceChildren(...memories.map(m=>{const li=document.createElement('li'),time=document.createElement('time'),span=document.createElement('span');time.textContent=m.at.toLocaleTimeString('zh-TW',{hour12:false});span.textContent=m.text;li.append(time,span);return li;}));
+}
 function integers(values){return values.every(v=>/^\d+$/.test(v)&&Number.isSafeInteger(Number(v)));}
 function parseLife(line){
  const f=line.split(',');if(f.length!==16||f[0]!=='PET'||!['EGG','HEALTHY','TIRED','WEAK','DEAD'].includes(f[2])||!integers(f.slice(1).filter((_,i)=>i!==1)))return null;
- const n=i=>Number(f[i]);if(n(3)>100||!n(8)||!n(11)||!n(12)||!n(13)||n(10)>1||n(14)>1||n(15)>1)return null;
+ const n=i=>Number(f[i]);if(n(3)>100||!n(8)||n(10)>1||n(14)>1||n(15)>1)return null;
  return {uptime:n(1),phase:f[2],energy:n(3),work:n(4),rest:n(5),cycles:n(6),rests:n(7),generation:n(8),reminders:n(9),paused:!!n(10),remindGoal:n(11),restGoal:n(12),decay:n(13),demo:!!n(14),started:!!n(15)};
 }
-function parseState(line){const f=line.split(',');if(f.length<14||f[0]!=='STATE'||!Object.hasOwn(STATES,f[2])||f[6]!=='A'||!integers([f[1],f[3],f[4],f[5],f[12],f[13]])||Number(f[12])>1||Number(f[13])>1)return null;return {state:f[2],desk:Number(f[3]),study:Number(f[4]),computer:Number(f[5]),phone:f[12]==='1',noisy:f[16]==='1',tracks:parseTracks(f[17])};}
-const TRACK_NAMES={book:'書本',phone:'手機',laptop:'筆電',keyboard:'鍵盤',mouse:'滑鼠'};
-// 板子鎖定後一路追蹤的物品：類別-ID-秒數-是否暫時看不到
 function parseTracks(text){if(!text||text==='-')return [];return text.split('|').map(p=>p.split('-')).filter(p=>p.length===4&&Object.hasOwn(TRACK_NAMES,p[0])&&integers(p.slice(1))).map(p=>({name:TRACK_NAMES[p[0]],id:Number(p[1]),seconds:Number(p[2]),lost:p[3]==='1'})).slice(0,4);}
 function trackText(tracks){return tracks.length?'持續追蹤：'+tracks.map(t=>`${t.name} #${t.id} · ${t.lost?'暫時看不到，等它回來':fmt(t.seconds)}`).join('　'):'';}
+function parseState(line){const f=line.split(',');if(f.length<14||f[0]!=='STATE'||!Object.hasOwn(STATES,f[2])||f[6]!=='A'||!integers([f[1],f[3],f[4],f[5],f[12],f[13]])||Number(f[12])>1||Number(f[13])>1)return null;return {state:f[2],desk:Number(f[3]),study:Number(f[4]),computer:Number(f[5]),phone:f[12]==='1',noisy:f[16]==='1',tracks:parseTracks(f[17])};}
 function parseCare(line){const f=line.trim().split(',');if(f.length!==11||f[0]!=='CARE'||!integers(f.slice(1)))return null;const n=i=>Number(f[i]);if(n(4)>99||!n(3)||!n(8)||n(7)>n(8)||n(10)>1)return null;return {boot:n(1),revision:n(2),generation:n(3),food:n(4),feeds:n(5),learned:n(6),next:n(7),goal:n(8),lastFeed:n(9),available:!!n(10)};}
-async function enableAudio(){if(!soundEnabled)return;try{audio ||= new (window.AudioContext||window.webkitAudioContext)();await audio.resume();}catch{toast('瀏覽器還沒準備好聲音，提醒仍會顯示在小屋。');}}
-function chirp(kind){if(!soundEnabled||!audio||audio.state!=='running')return;for(let i=0;i<(kind==='weak'?2:3);i++){const start=audio.currentTime+i*.23,osc=audio.createOscillator(),gain=audio.createGain();osc.type='sine';osc.frequency.setValueAtTime(1800,start);osc.frequency.exponentialRampToValueAtTime(2900,start+.07);osc.frequency.exponentialRampToValueAtTime(1500,start+.15);gain.gain.setValueAtTime(.0001,start);gain.gain.exponentialRampToValueAtTime(.09,start+.015);gain.gain.exponentialRampToValueAtTime(.0001,start+.18);osc.connect(gain);gain.connect(audio.destination);osc.start(start);osc.stop(start+.2);osc.onended=()=>{osc.disconnect();gain.disconnect();};}}
+function parsePlan(line){
+ const f=line.trim().split(',');if(f.length!==15||f[0]!=='PLAN'||!integers(f.slice(1)))return null;const n=i=>Number(f[i]);
+ if(n(2)>3||n(6)>2||!n(9)||n(9)>n(10)||!n(11)||n(11)>n(12)||!n(13)||n(13)>n(14))return null;
+ return {revision:n(1),phase:['NONE','WAITING','RUNNING','DONE'][n(2)],focus:n(3),rest:n(4),goal:n(5),purpose:n(6),startsIn:n(7),learned:n(8),focusMin:n(9),focusMax:n(10),restMin:n(11),restMax:n(12),goalMin:n(13),goalMax:n(14)};
+}
+function planActive(){return plan&&(plan.phase==='RUNNING'||plan.phase==='DONE');}
+async function enableAudio(){if(!soundEnabled)return;try{audio ||= new (window.AudioContext||window.webkitAudioContext)();await audio.resume();}catch{}}
+function chirp(kind){if(!soundEnabled||!audio||audio.state!=='running')return;for(let i=0;i<(kind==='weak'?2:3);i++){const start=audio.currentTime+i*.23,osc=audio.createOscillator(),gain=audio.createGain();osc.type='square';osc.frequency.setValueAtTime(1800,start);osc.frequency.exponentialRampToValueAtTime(2900,start+.07);osc.frequency.exponentialRampToValueAtTime(1500,start+.15);gain.gain.setValueAtTime(.0001,start);gain.gain.exponentialRampToValueAtTime(.05,start+.015);gain.gain.exponentialRampToValueAtTime(.0001,start+.18);osc.connect(gain);gain.connect(audio.destination);osc.start(start);osc.stop(start+.2);osc.onended=()=>{osc.disconnect();gain.disconnect();};}}
 function receiveCare(next,quiet=false){
- // 以小屋的存量為準，晚到的回應別蓋回去。
+ // 以小屋的存量為準，晚到的回應別蓋回去
  if(care&&next.boot===care.boot&&next.revision<care.revision)return;
  if(!quiet&&care&&next.boot===care.boot&&next.generation===care.generation){
-  if(next.feeds>care.feeds){eatUntil=Date.now()+6500;motion.next=0;toast('穀穀收到！啾啾的成長 +1。');remember('餵啾啾吃了穀穀，長大了一點點。');}
-  else if(next.food>care.food){celebrateUntil=Date.now()+2500;toast('認真學習的收穫：穀穀 +1。');remember('收穫一份穀穀，今天的努力有了小成果。');}
+  if(next.feeds>care.feeds){eatUntil=Date.now()+5500;toast('穀穀收到！啾啾的成長 +1。');remember('餵啾啾吃了穀穀，成長 +1。');}
+  else if(next.food>care.food){celebrateUntil=Date.now()+2200;toast('認真學習的收穫：穀穀 +1。');remember('認真學習，收穫一份穀穀。');}
  }
  care=next;
 }
+function receivePlan(next,quiet=false){
+ if(!next)return;if(plan&&next.revision<plan.revision&&next.phase===plan.phase)return;
+ const first=!plan;plan=next;if(first||!formTouched)fillForm();
+}
 function applySnapshot(text){
- // 同一筆資料不延長有效時間，重連也不補叫。
+ // 同一筆資料不延長有效時間，重連也不補叫
  const lines=text.trim().split(/\r?\n/),net=lines[0].split(',');if(net.length!==4||net[0]!=='NET'||!integers(net.slice(1)))throw Error('Incomplete home');
- const seq=Number(net[1]),board=Number(net[3]),nextCare=parseCare(lines.find(l=>l.startsWith('CARE,'))||'');
+ const seq=Number(net[1]),board=Number(net[3]),nextCare=parseCare(lines.find(l=>l.startsWith('CARE,'))||''),nextPlan=parsePlan(lines.find(l=>l.startsWith('PLAN,'))||'');
  const reboot=board<lastBoardMs||seq<lastSequence||(care&&nextCare&&care.boot!==nextCare.boot);
  const quiet=suppressSound||reboot||Date.now()-lastSnapshotAt>3000;
- if(reboot){life=null;care=null;lastSequence=-1;eventIds.clear();eatUntil=0;celebrateUntil=0;remember('小屋重新醒來，新的故事開始了。');}
+ if(reboot){life=null;care=null;plan=null;lastSequence=-1;eventIds.clear();eatUntil=0;celebrateUntil=0;remember('小屋重新開機，請重新設定學習計畫。');}
  if(seq>0&&seq!==lastSequence){
   const next=parseLife(lines.find(l=>l.startsWith('PET,'))||''),state=parseState(lines.find(l=>l.startsWith('STATE,'))||'');
   if(!next||!state)throw Error('Incomplete companion');
@@ -149,7 +289,8 @@ function applySnapshot(text){
   current=state;life=next;lastSnapshotAt=Date.now();lastSequence=seq;suppressSound=false;
  }
  if(nextCare)receiveCare(nextCare,quiet);
- if(!quiet)for(const line of lines){const f=line.split(',');if(f[0]!=='EVENT'||f.length!==4||!integers(f.slice(1,3))||eventIds.has(f[2]))continue;eventIds.add(f[2]);if(eventIds.size>300)eventIds.delete(eventIds.values().next().value);const label={WELCOME:'你回到桌前，啾啾也準備好了。',LEAVE:'一起離開桌前，伸個懶腰。',REMIND:'學習告一段落，帶啾啾休息一下吧。',WEAK:'啾啾有點累了，這次真的要休息囉。',DIED:'啾啾累得離開了。完整休息後，再迎接新的生命。',RESTED:'好好休息過，重新充滿活力。',REBORN:'一顆新的蛋，等你一起慢慢養大。'}[f[3]];if(label)remember(label);}
+ receivePlan(nextPlan,quiet);
+ if(!quiet)for(const line of lines){const f=line.split(',');if(f[0]!=='EVENT'||f.length!==4||!integers(f.slice(1,3))||eventIds.has(f[2]))continue;eventIds.add(f[2]);if(eventIds.size>300)eventIds.delete(eventIds.values().next().value);const label=EVENTS[f[3]];if(label)remember(label);}
  eventCursor=Number(net[2]);lastBoardMs=board;render();
 }
 function pollNetwork(){
@@ -157,85 +298,295 @@ function pollNetwork(){
  const token=epoch;networkTask=(async()=>{const controller=new AbortController();networkAbort=controller;const timeout=setTimeout(()=>controller.abort(),2200);try{const res=await fetch('/api/poll?after='+eventCursor,{method:'POST',headers:{'X-StudyBuddy':'1'},cache:'no-store',signal:controller.signal});if(!res.ok)throw Error('Unavailable home');const body=await res.text();if(token===epoch&&networkEnabled)applySnapshot(body);}catch{if(token===epoch&&networkEnabled){suppressSound=true;if(life)life.paused=true;render();}}finally{clearTimeout(timeout);if(networkAbort===controller)networkAbort=null;}})().finally(()=>{networkTask=null;});return networkTask;
 }
 async function connect(){
- if(location.protocol!=='http:'&&location.protocol!=='https:'){$('addressBox').hidden=false;$('settings').showModal();return;}
- if(networkEnabled)return;await enableAudio();networkEnabled=true;++epoch;lastSequence=-1;lastBoardMs=-1;eventCursor=-1;suppressSound=true;life=null;care=null;eatUntil=0;render();await pollNetwork();
+ if(location.protocol!=='http:'&&location.protocol!=='https:'){$('addressBox').classList.remove('hidden');toast('請輸入小屋的 Wi-Fi 位址。');return;}
+ if(networkEnabled)return;networkEnabled=true;++epoch;lastSequence=-1;lastBoardMs=-1;eventCursor=-1;suppressSound=true;life=null;care=null;eatUntil=0;render();await pollNetwork();
 }
 async function disconnect(){networkEnabled=false;++epoch;networkAbort?.abort();feedAbort?.abort();suppressSound=true;eatUntil=0;feedBusy=false;if(life)life.paused=true;render();await networkTask;}
+async function post(url){const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),2500);try{return await fetch(url,{method:'POST',headers:{'X-StudyBuddy':'1'},cache:'no-store',signal:controller.signal});}finally{clearTimeout(timeout);}}
 async function feed(){
- // 只送一次；沒收到回覆就查存量，不再扣一次。
- if(feedBusy||Date.now()<eatUntil||!fresh()||!care?.available||!care.food||!life.started||life.phase==='DEAD'||care.generation!==life.generation)return;
- feedBusy=true;const token=epoch,boot=care.boot,revision=care.revision,controller=new AbortController();feedAbort=controller;const timeout=setTimeout(()=>controller.abort(),2500);render();
- try{const res=await fetch(`/api/feed?boot=${boot}&revision=${revision}`,{method:'POST',headers:{'X-StudyBuddy':'1'},cache:'no-store',signal:controller.signal});const next=parseCare(await res.text());if(token!==epoch||!networkEnabled)return;if(!next||next.boot!==boot||(!res.ok&&res.status!==409))throw Error('Unconfirmed feed');receiveCare(next);if(!res.ok)toast('啾啾先緩一下，等小屋更新後再餵。');}
+ // 只送一次；沒收到回覆就查存量，不再扣一次
+ if(feedBusy||Date.now()<eatUntil||!fresh()||!planActive()||!care?.available||!care.food||!life.started||life.phase==='DEAD'||care.generation!==life.generation)return;
+ feedBusy=true;const token=epoch,boot=care.boot,revision=care.revision;render();
+ try{const res=await post(`/api/feed?boot=${boot}&revision=${revision}`);const next=parseCare(await res.text());if(token!==epoch||!networkEnabled)return;if(!next||next.boot!==boot||(!res.ok&&res.status!==409))throw Error('Unconfirmed feed');receiveCare(next);if(!res.ok)toast('啾啾先緩一下，等小屋更新後再餵。');}
  catch{if(token===epoch&&networkEnabled)toast('正在確認餵食結果，先別急著再按。');}
- finally{clearTimeout(timeout);if(feedAbort===controller)feedAbort=null;if(token===epoch){feedBusy=false;render();await pollNetwork();}}
+ finally{if(token===epoch){feedBusy=false;render();await pollNetwork();}}
 }
-function growth(){if(!life?.started||life.phase==='DEAD')return 0;const score=(care?.generation===life.generation?care.feeds:0)+life.cycles*2;return score>=16?4:score>=8?3:score>=3?2:1;}
-function renderActivity(online){
- const mode=!networkEnabled?'READY':!online?'PAUSED':life.phase==='DEAD'?'DEAD':current.state;
- const a=ACTIVITIES[mode]||ACTIVITIES.PAUSED;
- if(mode!==activityMode){activityMode=mode;$('home').dataset.activity=mode;$('activityIcon').innerHTML=icon(a[0]);motion.ready=false;}
- $('activityTitle').textContent=a[1];$('activityDescription').textContent=a[2];$('trackLine').textContent=online&&current.tracks?trackText(current.tracks):'';
- $('rewardStatus').textContent=['STUDYING','COMPUTER'].includes(mode)&&!care?'等待糧倉回應':a[3];
- const progress=care?Math.max(0,Math.min(100,Math.floor((care.goal-care.next)/care.goal*100))):0;
- $('rewardFill').style.width=progress+'%';$('rewardProgress').setAttribute('aria-valuenow',String(progress));
-}
-function render(){
- const online=fresh(),alive=life?.started&&life.phase!=='DEAD',sleeping=current.state==='AWAY';
- renderActivity(online);
- $('connectionDot').classList.toggle('online',!!online);$('connectionLabel').textContent=online?'正在陪伴':networkEnabled?'等待小屋回應':'等你回家';$('connectButton').disabled=networkEnabled;$('connectLabel').textContent=networkEnabled?'陪伴已開始':'開始陪伴';$('disconnectButton').disabled=!networkEnabled;$('settingsConnection').textContent=online?'小屋已連上':networkEnabled?'正在找小屋':'還沒開始陪伴';
- $('activityLabel').textContent=!networkEnabled?'準備迎接新的一天':!online?'暫停一下，等你回來':STATES[current.state];
- $('energyLabel').textContent=life?`${life.energy}%`:'等待陪伴';$('energyFill').style.width=(life?.energy||0)+'%';
- $('roomCaption').textContent=!networkEnabled?'小屋已經準備好了，等你一起開始。':!online?'暫時看不清楚，先停下來等你。':life.phase==='DEAD'?'啾啾的這段旅程結束了。完整休息後，會迎來新的蛋。':sleeping?'你去休息，啾啾也在床邊打個盹。':life.phase==='WEAK'?'啾啾快沒力氣了，離開桌前休息一下吧。':life.phase==='TIRED'?'休息時間到了，啾啾想和你一起伸個懶腰。':Date.now()<eatUntil?'啾啾正在吃穀穀，謝謝你的照顧。':current.noisy?'周圍有點熱鬧，幫啾啾找回安靜的小角落吧。':'小雞會在屋裡散步，點一下牠，打個招呼吧。';
- const resting=online&&sleeping&&life.work>0,elapsed=life?(resting?life.rest:life.work):0,goal=life?(resting?life.restGoal:life.remindGoal):1500;
- $('sessionTime').textContent=fmt(elapsed);$('sessionHint').textContent=!networkEnabled?'坐好，翻開書，慢慢開始。':!online?'陪伴已暫停，不會累積時間。':resting?'正在休息，讓活力慢慢回來。':'這一輪已在桌前陪伴的時間。';$('sessionFill').style.width=Math.min(100,elapsed/goal*100)+'%';$('sessionFoot').textContent=resting?`再休息 ${fmt(Math.max(0,goal-elapsed))}`:elapsed>=goal?'這一輪完成了，該起身休息囉。':`再陪伴 ${fmt(goal-elapsed)}，就休息一下`;
- $('foodCount').textContent=care?.food??0;$('rewardHint').textContent=care?(online&&current.state==='PHONE'?`手機出現，暫停在剩餘 ${fmt(care.next)}。`:!online||!['STUDYING','COMPUTER'].includes(current.state)||!alive?`進度保留，還差 ${fmt(care.next)} 有效學習。`:`再學習 ${fmt(care.next)}，收穫下一份。`):'每認真學習 5 分鐘，收穫 1 份。';
- if(online&&alive&&!sleeping&&life.phase==='HEALTHY'&&Date.now()>=eatUntil){
-  $('roomCaption').textContent=current.state==='PHONE'?'手機移開、確認消失後，回到書本或電腦就會接著累積。':current.state==='COMPUTER'?'啾啾正在打字，陪你完成今天的作業。':current.state==='STUDYING'?'翻一頁，前進一點點；啾啾正在陪你讀書。':$('roomCaption').textContent;
+
+// ── 計畫表單：一定要填，而且要在小屋給的範圍內 ──
+function demoUnit(){return plan&&plan.focusMax<=300;}
+function unitScale(){return demoUnit()?1:60;}
+function fillForm(){
+ if(!plan)return;const k=unitScale(),u=demoUnit()?'秒':'分鐘';
+ document.querySelectorAll('.unit').forEach(e=>e.textContent=u);
+ for(const [id,key] of [['focus','focus'],['rest','rest'],['goal','goal']]){
+  const input=$(id+'Input'),min=Math.ceil(plan[key+'Min']/k),max=Math.floor(plan[key+'Max']/k);
+  input.min=min;input.max=max;input.step=1;$(id+'Range').textContent=`可設定 ${min}～${max} ${u}`;
+  const preset=plan.phase!=='NONE'?plan[key]/k:demoUnit()?{focus:60,rest:10,goal:180}[key]:{focus:25,rest:5,goal:60}[key];
+  input.value=String(Math.min(max,Math.max(min,Math.round(preset))));
  }
- $('feedButton').disabled=feedBusy||Date.now()<eatUntil||!online||!care?.available||!care.food||!alive||care.generation!==life.generation;
- $('feedLabel').textContent=feedBusy?'穀穀送出中…':Date.now()<eatUntil?'正在享用…':'餵啾啾吃穀穀';$('feedHint').textContent=!networkEnabled?'開始陪伴後，就能一起收集。':!online?'等小屋回應後，再送上穀穀。':!care?'糧倉還沒準備好，稍後再來看看。':!alive?'等小雞醒來，再一起吃穀穀。':!care.available?'等你回到桌前，就可以餵食。':!care.food?'讀書或電腦學習，收集第一份穀穀。':'每次餵食使用 1 份，成長 +1。';
- const nextStage=growth();if(nextStage!==stage){const grew=stage>0&&nextStage>stage;stage=nextStage;$('petArt').innerHTML=chick(stage);$('avatar').innerHTML=chick(stage);$('growthStages').innerHTML=GROWTH.map((s,i)=>`<div class="stage ${i<=stage?'reached':''} ${i===stage?'current':''}"><div class="stageart">${chick(i)}</div><span>${s[0]}</span></div>`).join('');if(grew&&online){celebrateUntil=Date.now()+2200;remember('啾啾長成了'+GROWTH[stage][0]+'。');}}
- $('petIdentity').textContent=life?`${GROWTH[stage][0]} · 第 ${life.generation} 代`:'一顆小小的期待';const score=(care?.generation===life?.generation?(care?.feeds||0):0)+(life?.cycles||0)*2;
- $('growthHint').textContent=stage===0?'從小小的蛋開始，陪牠慢慢長大。':stage===4?'小屋守護者，繼續收集你們的日常。':`還差 ${Math.max(0,GROWTH[stage+1][1]-score)} 點成長，成為${GROWTH[stage+1][0]}。`;$('demoNote').hidden=!life?.demo;
- $('restHint').textContent=life?`陪伴 ${fmt(life.remindGoal)} 後輕叫一次；再久坐一會兒會再提醒。離開桌前休息 ${fmt(life.restGoal)}，讓活力回來。`:'時間到了，啾啾會輕輕叫你。離開桌前走一走，回來再一起努力。';
+ $('purpose').value=String(plan.purpose||0);validateForm();
+}
+function readForm(){
+ const k=unitScale(),num=id=>{const v=$(id).value.trim();return /^\d+$/.test(v)?Number(v)*k:NaN;};
+ const f=num('focusInput'),r=num('restInput'),g=num('goalInput'),errors={};
+ if(!plan)return {errors:{form:'等待小屋回應'}};
+ const check=(key,v,name)=>{if(!Number.isInteger(v))errors[key]=`請填寫${name}`;else if(v<plan[key+'Min']||v>plan[key+'Max'])errors[key]=`${name}要在 ${Math.ceil(plan[key+'Min']/k)}～${Math.floor(plan[key+'Max']/k)} 之間`;};
+ check('focus',f,'專注間隔');check('rest',r,'休息時間');check('goal',g,'總目標時間');
+ if(!errors.goal&&!errors.focus&&g<f)errors.goal='總目標不能比一次專注還短';
+ let delay=0;const mode=document.querySelector('input[name=startMode]:checked').value;
+ if(mode==='at'){const v=$('startAt').value;if(!/^\d\d:\d\d$/.test(v))errors.start='請選擇開始時間';else{const [h,m]=v.split(':').map(Number),now=new Date(),at=new Date(now);at.setHours(h,m,0,0);if(at<=now)at.setDate(at.getDate()+1);delay=Math.round((at-now)/1000);if(delay>12*3600)errors.start='開始時間要在 12 小時內';}}
+ return {focus:f,rest:r,goal:g,purpose:Number($('purpose').value),delay,errors};
+}
+function validateForm(){
+ const v=readForm();
+ for(const key of ['focus','rest','goal']){$(key+'Err').textContent=v.errors[key]||'';$(key+'Input').setAttribute('aria-invalid',String(!!v.errors[key]));}
+ $('startErr').textContent=v.errors.start||'';
+ const ok=!Object.keys(v.errors).length;$('startButton').disabled=!ok||planBusy||!connected();
+ $('formHint').textContent=!connected()?'等待小屋回應…':!ok?'請先把必填欄位設定在範圍內。':plan&&plan.phase!=='NONE'?'重新開始會套用新設定，這一輪計時從頭開始。':'專注間隔與休息時間一定要設定，才能開始。';
+ return v;
+}
+async function startPlan(e){
+ e?.preventDefault();await enableAudio();const v=validateForm();if(Object.keys(v.errors).length||planBusy||!connected())return;
+ planBusy=true;validateForm();
+ try{const res=await post(`/api/plan?focus=${v.focus}&rest=${v.rest}&goal=${v.goal}&purpose=${v.purpose}&delay=${v.delay}`);const next=parsePlan(await res.text());if(!res.ok||!next)throw Error(res.status===422?'range':'net');formTouched=false;receivePlan(next);remember(`設定計畫：${PURPOSES[v.purpose]}，專注 ${fmt(v.focus)}、休息 ${fmt(v.rest)}、總目標 ${fmt(v.goal)}${v.delay?'，'+fmt(v.delay)+' 後開始':''}。`);toast(v.delay?'計畫已排好，時間到會自動開始。':'計畫開始！');restDismissed=false;}
+ catch(err){toast(err.message==='range'?'小屋不接受這個設定，請確認範圍。':'沒有送到小屋，請再試一次。');}
+ finally{planBusy=false;validateForm();render();await pollNetwork();}
+}
+async function stopPlan(){
+ if(!plan||plan.phase==='NONE'||planBusy||!connected())return;if(!confirm('要結束目前的學習計畫嗎？'))return;
+ planBusy=true;try{const res=await post('/api/plan/stop');const next=parsePlan(await res.text());if(next)receivePlan(next);remember('結束了學習計畫。');}catch{toast('沒有送到小屋，請再試一次。');}finally{planBusy=false;validateForm();render();}
+}
+
+// ── 互動：都只是畫面，不影響板子判斷 ──
+function canPlay(){return fresh()&&planActive()&&life.started&&life.phase!=='DEAD'&&current.state!=='AWAY'&&current.state!=='PHONE';}
+function petChick(){if(!canPlay()){toast(current.state==='PHONE'?'先把手機放下，再來摸摸啾啾。':'啾啾在等你，一起好好學習，也好好休息。');return;}if(Date.now()<petUntil)return;petUntil=Date.now()+1800;remember('摸了摸啾啾。');}
+function playToy(kind){if(!canPlay()){toast('計畫進行中、人在桌前時才能玩玩具。');return;}if(toy&&Date.now()<toy.until)return;toy={kind,start:Date.now(),until:Date.now()+6000};remember({ball:'和啾啾玩小球。',feather:'拿羽毛逗啾啾。',blocks:'陪啾啾堆積木。'}[kind]);$('toys').classList.add('hidden');$('toyButton').setAttribute('aria-expanded','false');}
+function growth(){if(!life?.started||life.phase==='DEAD')return 0;const score=(care?.generation===life.generation?care.feeds:0)+life.cycles*2;return score>=16?4:score>=8?3:score>=3?2:1;}
+function mode(){
+ if(!networkEnabled||!life)return 'READY';if(!connected())return 'PAUSED';if(life.phase==='DEAD')return 'DEAD';
+ if(!plan||plan.phase==='NONE')return 'NOPLAN';if(plan.phase==='WAITING')return 'WAITING';if(life.paused&&current.state!=='AWAY')return 'PAUSED';
+ return Object.hasOwn(ACTIVITIES,current.state)?current.state:'PAUSED';
+}
+function resting(){return connected()&&planActive()&&current.state==='AWAY'&&life&&life.work>0&&!life.paused;}
+function setBar(id,ratio){$(id).style.width=Math.max(0,Math.min(100,ratio*100))+'%';}
+function render(){
+ const m=mode(),a=ACTIVITIES[m],online=fresh(),alive=life?.started&&life.phase!=='DEAD';
+ $('connectionDot').classList.toggle('online',connected());$('modeChip').textContent=m==='READY'?'連線中':m==='PAUSED'?'暫停':m==='NOPLAN'?'未設定':STATES[current.state]||'陪伴中';
+ $('activityTitle').textContent=a[0];$('activityDescription').textContent=a[1];$('rewardStatus').textContent=a[2];
+ $('trackLine').textContent=connected()&&current.tracks?trackText(current.tracks):'';
+ $('energyLabel').textContent=life?life.energy+'%':'--';setBar('energyFill',(life?.energy||0)/100);
+ $('connectLabel').textContent=connected()?'已連線':'重新連線';$('connectButton').disabled=connected();
+ // 互動區
+ $('feedButton').disabled=feedBusy||Date.now()<eatUntil||!online||!planActive()||!care?.available||!care.food||!alive||care.generation!==life.generation;
+ $('feedLabel').textContent=feedBusy?'送出中…':Date.now()<eatUntil?'享用中…':'餵食';
+ $('feedHint').textContent=!connected()?'等小屋回應後才能互動。':!planActive()?'開始計畫後，認真學習就能收集穀穀。':!care?'糧倉還沒準備好。':!alive?'等小雞醒來，再一起吃穀穀。':!care.available?'回到桌前才可以餵食。':!care.food?'讀書或電腦學習，收集第一份穀穀。':'每次餵食用 1 份穀穀，成長 +1。';
+ $('foodCount').textContent=care?.food??0;const progress=care?Math.max(0,Math.min(100,Math.floor((care.goal-care.next)/care.goal*100))):0;$('rewardFill').style.width=progress+'%';$('rewardProgress').setAttribute('aria-valuenow',String(progress));
+ $('rewardHint').textContent=!care?'讀書或電腦學習才會累積。':online&&current.state==='PHONE'?`手機出現，暫停在剩餘 ${fmt(care.next)}。`:online&&['STUDYING','COMPUTER'].includes(current.state)&&alive?`再學習 ${fmt(care.next)}，收穫下一份。`:`進度保留，還差 ${fmt(care.next)} 有效學習。`;
+ $('palmButton').classList.toggle('on',palmMode);$('palmButton').setAttribute('aria-pressed',String(palmMode));$('stage').classList.toggle('palm',palmMode);
+ const nextStage=growth();if(nextStage!==stage){const grew=stage>0&&nextStage>stage;stage=nextStage;drawStages();if(grew&&online){celebrateUntil=Date.now()+2200;remember('啾啾長成了'+GROWTH[stage][0]+'。');}}
+ $('growthName').textContent=life?`${GROWTH[stage][0]} · 第 ${life.generation} 代`:'一顆小小的期待';
+ // 紀錄區
+ $('demoNote').hidden=!life?.demo;
+ $('planSummary').textContent=!plan?'等待小屋回應…':plan.phase==='NONE'?'還沒有學習計畫，請在下方設定。':`${PURPOSES[plan.purpose]} · 專注 ${fmt(plan.focus)} · 休息 ${fmt(plan.rest)} · `+(plan.phase==='WAITING'?`${fmt(plan.startsIn)} 後開始`:plan.phase==='DONE'?'已達成總目標，繼續陪伴中':'進行中');
+ const goalS=plan&&plan.phase!=='NONE'?plan.goal:0,learned=plan&&plan.phase!=='NONE'?Math.min(plan.learned,plan.goal):0;$('goalTime').textContent=`${fmt(learned)} / ${fmt(goalS)}`;setBar('goalFill',goalS?learned/goalS:0);
+ const work=life?.work||0,focusGoal=life?.remindGoal||1,restS=life?.rest||0,restGoal=life?.restGoal||1;
+ $('sessionTime').textContent=fmt(work);setBar('sessionFill',work/focusGoal);$('sessionBar').className='bar'+(work>=focusGoal?' orange':'');
+ $('sessionFoot').textContent=!planActive()?'計畫開始後才計時':work>=focusGoal?'專注時間到了，起身休息吧':`再 ${fmt(focusGoal-work)} 提醒休息`;
+ $('restTime').textContent=fmt(restS);setBar('restFill',restS/restGoal);$('restFoot').textContent=resting()?`再休息 ${fmt(restGoal-restS)}`:`休息 ${fmt(restGoal)} 就能恢復活力`;
+ $('statDesk').textContent=fmt(current.desk);$('statStudy').textContent=fmt(current.study);$('statComputer').textContent=fmt(current.computer);$('statPhone').textContent=fmt(phoneSeconds);$('statRests').textContent=life?.rests??0;$('statReminders').textContent=life?.reminders??0;
+ if(!formTouched)validateForm();else validateForm();
+ $('stopButton').disabled=!plan||plan.phase==='NONE'||planBusy||!connected();
+ // 休息時整個畫面交給小雞
+ const showRest=resting()&&!restDismissed;if($('restOverlay').hidden===showRest){$('restOverlay').hidden=!showRest;if(showRest)restScene.start=performance.now();}
+ if(!resting())restDismissed=false;
+ $('restOverlayText').textContent=life?`${fmt(restS)} / ${fmt(restGoal)}　離開桌前走一走，回來時啾啾會醒來`:'';
  $('toast').classList.toggle('visible',Date.now()<toastUntil);
 }
-function pose(name,bubble){if(petPose!==name){petPose=name;$('wanderer').dataset.pose=name;$('petTool').innerHTML=icon(name==='type'?'laptop':name==='phone'?'phone':'book');}if(bubbleName!==bubble){bubbleName=bubble;$('petBubble').innerHTML=icon(bubble);}}
-function roomPoint(x,y){const r=$('room').getBoundingClientRect(),h=$('home').getBoundingClientRect(),w=$('wanderer').offsetWidth;return {x:r.left-h.left+r.width*x-w/2,y:r.top-h.top+r.height*y-$('wanderer').offsetHeight+10};}
-function target(p){motion.tx=p.x;motion.ty=p.y;}
-function frame(ts){
- const dt=Math.min((ts-motion.last)/1000||0,.05);motion.last=ts;const now=Date.now(),online=fresh(),dead=life?.phase==='DEAD',sleep=online&&current.state==='AWAY';
- if(!motion.ready){const p=roomPoint(.46,.86);motion.x=p.x;motion.y=p.y;target(p);motion.ready=true;motion.next=now+3500;}
- let state='idle',bubble='heart',canWalk=online&&life.started&&!dead&&!sleep&&!reduced.matches;
- if(!life?.started){state='egg';bubble='spark';}
- else if(dead){state='dead';bubble='moon';}
- else if(!online){state='idle';bubble='pause';}
- else if(sleep){state='sleep';bubble='sleep';const p=roomPoint(.82,.73);motion.x=p.x;motion.y=p.y;target(p);}
- else if(Date.now()<eatUntil){target(roomPoint(.71,.88));state='eat';bubble='seed';}
- else if(now<celebrateUntil){state='hop';bubble='heart';canWalk=false;}
- else if(current.state==='PHONE'){state='phone';bubble='pause';canWalk=false;}
- else if(life.phase==='WEAK'||life.phase==='TIRED'){state='tired';bubble='moon';}
- else if(current.state==='STUDYING'){state='read';bubble='book';}
- else if(current.state==='COMPUTER'){state='type';bubble='laptop';}
- if(canWalk){
-  if(now>=motion.next&&now>=eatUntil){
-   if(Math.random()<.24){const r=$('walkway').getBoundingClientRect(),h=$('home').getBoundingClientRect();target({x:r.left-h.left+r.width*(.18+Math.random()*.64)-$('wanderer').offsetWidth/2,y:r.top-h.top+r.height-$('wanderer').offsetHeight});}
-   else target(roomPoint(.35+Math.random()*.29,.79+Math.random()*.15));motion.next=now+6500+Math.random()*5500;
-  }
-  const dx=motion.tx-motion.x,dy=motion.ty-motion.y,distance=Math.hypot(dx,dy),speed=now<eatUntil?150:state==='tired'?18:38;
-  if(distance>2){const travel=Math.min(distance,dt*speed);motion.x+=dx/distance*travel;motion.y+=dy/distance*travel;if(Math.abs(dx)>1)motion.facing=dx<0?-1:1;state='walk';if(travel===distance)motion.next=Math.max(motion.next,now+3500);}
- }
- if(reduced.matches&&now<eatUntil){const p=roomPoint(.71,.88);motion.x=p.x;motion.y=p.y;}
- motion.x=Math.max(4,Math.min(motion.x,$('home').clientWidth-$('wanderer').offsetWidth-4));motion.y=Math.max(140,Math.min(motion.y,$('home').clientHeight-$('wanderer').offsetHeight-40));
- $('wanderer').style.transform=`translate(${Math.round(motion.x)}px,${Math.round(motion.y)}px)`;$('petArt').style.setProperty('--facing',motion.facing);pose(state,bubble);requestAnimationFrame(frame);
-}
-$('connectButton').onclick=connect;$('feedButton').onclick=feed;$('disconnectButton').onclick=disconnect;
-$('petButton').onclick=()=>{if(fresh()&&life.started&&life.phase!=='DEAD'&&current.state!=='AWAY'){celebrateUntil=Date.now()+1800;toast('啾啾收到你的摸摸了。');}else toast('啾啾在等你，一起好好學習，也好好休息。');};
-$('settingsButton').onclick=()=>{$('addressBox').hidden=!['file:',''].includes(location.protocol);$('settings').showModal();};$('closeSettings').onclick=()=>$('settings').close();
-$('soundButton').onclick=async()=>{soundEnabled=!soundEnabled;$('soundButton').textContent=soundEnabled?'已開啟':'已關閉';$('soundButton').setAttribute('aria-pressed',String(soundEnabled));if(soundEnabled)await enableAudio();};
-$('openHome').onclick=()=>{try{const value=$('homeAddress').value.trim(),url=new URL(value.includes('://')?value:'http://'+value);if(url.protocol!=='http:'||!url.hostname||url.username||url.password||url.search||url.hash||url.pathname!=='/')throw Error();location.assign(url.href);}catch{toast('請輸入小屋的 Wi-Fi 位址，例如 192.168.1.88。');}};
-window.addEventListener('resize',()=>{motion.ready=false;});document.addEventListener('visibilitychange',()=>{motion.last=0;if(!document.hidden&&networkEnabled){suppressSound=true;pollNetwork();}});
-setInterval(()=>{if(networkEnabled)pollNetwork();render();},1000);render();requestAnimationFrame(frame);
 
+// ── 像素畫：小雞 16×16，一格一個顏色 ──
+const PAL={Y:'#f7cf4a',H:'#fde68a',D:'#d99a25',O:'#e8772e',E:'#2d2018',C:'#f29a86',K:'#d99a25',W:'#ffffff',G:'#3a3026',L:'#cde9f5',R:'#c0584a',N:'#6f9a55',A:'#ffd23f'};
+const GRAY={Y:'#c9c3b6',H:'#dcd7cc',D:'#a59e90',O:'#a59e90',E:'#5b544b',C:'#c9c3b6',K:'#a59e90'};
+const BODY=[
+ '................',
+ '......KK........',
+ '.....YYYY.......',
+ '....YYHYYY......',
+ '...YYHYYYYY.....',
+ '...YYYYYYYOO....',
+ '...YYYYYCYY.....',
+ '..YYYYYYYYYY....',
+ '.YYDYYYYYYYYY...',
+ '.YDDYYYYYYYYY...',
+ '.YYDYYYYYYYYY...',
+ '..YYYYYYYYYY....',
+ '...YYYYYYYY.....',
+ '................',
+ '................',
+ '................'];
+const EGG=['....WWWW....','...WWWWWW...','..WWWWWWWW..','..WWHWWWWW..','.WWHWWWWWWW.','.WWWWWWWWWW.','.WWWWWWWWHW.','.WWWWWWWWWW.','..WWWWWWWW..','..WWWWWWWW..','...WWWWWW...','....WWWW....'];
+// 座標取整數，像素邊緣才不會糊出格線
+function px(c,x,y,s,col){c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),Math.ceil(s),Math.ceil(s));}
+function sprite(c,rows,x,y,s,pal,flip){const w=rows[0].length;rows.forEach((row,j)=>{for(let i=0;i<w;i++){const k=row[i];if(k!=='.'&&pal[k])px(c,x+(flip?w-1-i:i)*s,y+j*s,s,pal[k]);}});}
+// o: face 方向、eye 眼睛、feet 腳、wing 翅膀、peck 低頭、glasses、stage、gray
+function drawChick(c,x,y,s,o={}){
+ const pal=o.gray?{...PAL,...GRAY}:PAL,flip=o.face<0,X=i=>x+(flip?15-i:i)*s,P=(i,j,k)=>px(c,X(i),y+j*s,s,pal[k]||k);
+ const head=o.peck?2:0,headX=o.peck?1:0;
+ BODY.forEach((row,j)=>{for(let i=0;i<16;i++){const k=row[i];if(k==='.')continue;const isHead=j<=6;const jj=isHead?j+head:j,ii=isHead?i+headX:i;if(ii<16)P(ii,jj,k==='K'&&o.stage>=2?'N':k);}});
+ const ey=4+head,ex=8+headX;
+ if(o.eye==='closed')P(ex-1,ey,'E'),P(ex,ey,'E'),P(ex+1,ey,'E');
+ else if(o.eye==='happy')P(ex-1,ey,'E'),P(ex,ey-1,'E'),P(ex+1,ey,'E');
+ else if(o.eye==='half')P(ex,ey,'E'),P(ex+1,ey,'E');
+ else if(o.eye==='x')P(ex-1,ey-1,'E'),P(ex+1,ey-1,'E'),P(ex,ey,'E'),P(ex-1,ey+1,'E'),P(ex+1,ey+1,'E');
+ else P(ex,ey,'E'),P(ex,ey-1,'E');
+ if(o.wing){P(2,8,'Y');P(1,9,'Y');P(2,9,'Y');P(1,7,'D');P(2,7,'D');P(0,8,'D');}
+ const f=o.feet??0;
+ if(f===0){P(5,13,'O');P(4,14,'O');P(5,14,'O');P(9,13,'O');P(8,14,'O');P(9,14,'O');}
+ else if(f===1){P(6,13,'O');P(5,14,'O');P(6,14,'O');P(8,13,'O');P(8,14,'O');P(9,14,'O');}
+ // 眼鏡：貼著眼睛的小框，往後一條鏡腳
+ if(o.glasses){for(const [i,j] of [[ex-1,ey-2],[ex,ey-2],[ex+1,ey-2],[ex-1,ey+1],[ex,ey+1],[ex+1,ey+1],[ex-2,ey-1],[ex-2,ey],[ex+2,ey-1],[ex+2,ey],[ex-3,ey-1],[ex-4,ey-1]])P(i,j,'G');for(const [i,j] of [[ex-1,ey-1],[ex-1,ey],[ex+1,ey-1],[ex+1,ey]])P(i,j,'L');}
+ if(o.stage>=3)for(let i=3;i<=10;i++)P(i,7,'R');
+ if(o.stage>=4){P(5,0,'A');P(7,0,'A');P(9,0,'A');for(let i=5;i<=9;i++)P(i,1,'A');}
+ if(o.halo)for(let i=4;i<=10;i++)P(i,-1,'A');
+}
+function heart(c,x,y,s){const H=['.R.R.','RRRRR','RRRRR','.RRR.','..R..'];sprite(c,H,x,y,s,PAL);}
+function zee(c,x,y,s,col='#3a3026'){const Z=['GGG','..G','.G.','G..','GGG'];sprite(c,Z,x,y,s,{G:col});}
+function bubble(c,x,y,s,kind){
+ c.fillStyle='#fffaf0';c.fillRect(x,y,9*s,8*s);c.fillStyle='#3a3026';c.fillRect(x,y,9*s,s);c.fillRect(x,y+7*s,9*s,s);c.fillRect(x,y,s,8*s);c.fillRect(x+8*s,y,s,8*s);c.fillRect(x+2*s,y+8*s,s,s);
+ const ix=x+2*s,iy=y+2*s;
+ if(kind==='heart')heart(c,ix,iy,s);else if(kind==='z')zee(c,ix+s,iy-s/2,s);else if(kind==='q')sprite(c,['GGG.','...G','.GG.','....','.G..'],ix+s,iy-s/2,s,{G:'#3a3026'});
+ else if(kind==='pause')sprite(c,['G.G','G.G','G.G','G.G'],ix+s,iy,s,{G:'#3a3026'});else if(kind==='moon')sprite(c,['.GG.','G...','G...','.GG.'],ix,iy,s,{G:'#4f7f9c'});
+ else if(kind==='book')sprite(c,['RRRRR','RWRWR','RWRWR','RRRRR'],ix,iy,s,PAL);
+ else if(kind==='sweat')sprite(c,['..B..','.BBB.','BBBBB','.BBB.'],ix,iy,s,{B:'#7fb7d6'});else if(kind==='star')sprite(c,['..A..','AAAAA','.AAA.','A...A'],ix,iy,s,PAL);
+}
+// 房間：左邊書桌、中間地毯、右邊床和飯碗
+function room(c,W,H,s,tint){
+ const floor=Math.round(H*.6);
+ c.fillStyle=tint==='read'?'#e3ecd2':tint==='type'?'#dbe7ec':'#efe4c9';c.fillRect(0,0,W,floor);
+ c.fillStyle='rgba(58,48,38,.06)';for(let x=0;x<W;x+=8*s)c.fillRect(x,0,s,floor);
+ c.fillStyle='#c9a978';c.fillRect(0,floor-3*s,W,3*s);c.fillStyle='#d8b887';c.fillRect(0,floor,W,H-floor);
+ c.fillStyle='#c4a272';for(let y=floor+6*s;y<H;y+=8*s)c.fillRect(0,y,W,s);
+ // 窗
+ const wx=Math.round(W*.38),ww=Math.round(W*.26),wy=Math.max(4*s,floor-38*s),wh=Math.min(24*s,floor-wy-8*s);
+ if(wh>8*s){c.fillStyle='#9b7650';c.fillRect(wx-2*s,wy-2*s,ww+4*s,wh+4*s);c.fillStyle='#bfe3ea';c.fillRect(wx,wy,ww,wh);c.fillStyle='#ffffff';c.fillRect(wx+3*s,wy+4*s,8*s,2*s);c.fillRect(wx+ww-14*s,wy+9*s,9*s,2*s);c.fillStyle='#9db97a';c.fillRect(wx,wy+wh-5*s,ww,5*s);c.fillStyle='#9b7650';c.fillRect(wx+ww/2-s/2,wy,s,wh);c.fillRect(wx,wy+wh/2,ww,s);}
+ // 書架
+ const sx=Math.round(W*.72);c.fillStyle='#9b7650';c.fillRect(sx,floor-30*s,W*.22,2*s);[['#6f9a55',3,9],['#c0584a',3,7],['#4f7f9c',4,10],['#e8a72e',3,8]].forEach(([col,w,h],i)=>{c.fillStyle=col;c.fillRect(sx+2*s+i*5*s,floor-30*s-h*s,w*s,h*s);});
+ // 書桌與檯燈
+ const dx=Math.round(W*.04);c.fillStyle='#a8825a';c.fillRect(dx,floor-14*s,30*s,3*s);c.fillRect(dx+2*s,floor-11*s,2*s,14*s);c.fillRect(dx+26*s,floor-11*s,2*s,14*s);c.fillStyle='#6f9a55';c.fillRect(dx+20*s,floor-22*s,7*s,3*s);c.fillStyle='#3a3026';c.fillRect(dx+23*s,floor-19*s,s,5*s);
+ // 床
+ const bx=Math.round(W*.70),by=floor+2*s;c.fillStyle='#9b7650';c.fillRect(bx,by-6*s,2*s,14*s);c.fillRect(bx,by+6*s,W*.27,2*s);c.fillStyle='#fffaf0';c.fillRect(bx+2*s,by,7*s,5*s);c.fillStyle='#8fb37a';c.fillRect(bx+9*s,by,W*.27-11*s,6*s);c.fillStyle='#7aa165';for(let i=bx+11*s;i<bx+W*.27-2*s;i+=4*s)c.fillRect(i,by,s,6*s);
+ // 地毯與飯碗
+ c.fillStyle='#e9d6a6';c.fillRect(W*.26,H-18*s,W*.42,7*s);c.fillStyle='#d8c08a';c.fillRect(W*.26+2*s,H-16*s,W*.42-4*s,3*s);
+ const gx=Math.round(W*.62),gy=H-12*s;c.fillStyle='#6b8c9e';c.fillRect(gx,gy,10*s,3*s);c.fillRect(gx+s,gy+3*s,8*s,s);
+ if(care?.food){c.fillStyle='#f7cf4a';for(let i=0;i<Math.min(care.food,4);i++)c.fillRect(gx+(2+i*2)*s,gy-s,s,s);}
+ return {floor,bowl:{x:gx,y:gy},bed:{x:bx+10*s,y:by-4*s},desk:{x:dx,y:floor}};
+}
+function book(c,x,y,s,flip){
+ c.fillStyle='#c0584a';c.fillRect(x,y,16*s,9*s);c.fillStyle='#fffaf0';c.fillRect(x+s,y+s,7*s,7*s);c.fillRect(x+8*s,y+s,7*s,7*s);
+ c.fillStyle='#b9ab93';for(let j=2;j<7;j+=2){c.fillRect(x+2*s,y+j*s,5*s,s);c.fillRect(x+9*s,y+j*s,5*s,s);}
+ if(flip){c.fillStyle='#fdf3d0';c.fillRect(x+8*s,y-2*s,5*s,9*s);c.fillStyle='#3a3026';c.fillRect(x+8*s,y-2*s,s,9*s);}
+}
+function laptop(c,x,y,s,t){
+ c.fillStyle='#3a3026';c.fillRect(x,y,18*s,12*s);c.fillStyle='#bfe3ea';c.fillRect(x+s,y+s,16*s,10*s);
+ c.fillStyle='#4f7f9c';const lines=Math.floor(t/300)%6;for(let i=0;i<=lines&&i<5;i++)c.fillRect(x+2*s,y+(2+i*2)*s,(5+((i*7)%9))*s,s);
+ if(Math.floor(t/400)%2)c.fillRect(x+2*s+((5+((Math.min(lines,4)*7)%9))*s),y+(2+Math.min(lines,4)*2)*s,s,s);
+ c.fillStyle='#8a8278';c.fillRect(x-2*s,y+12*s,22*s,3*s);c.fillStyle='#6b645b';for(let i=0;i<9;i++)c.fillRect(x+(i*2)*s,y+13*s,s,s);
+}
+function toyDraw(c,W,H,s,floor,t,cx){
+ if(!toy)return null;const e=(Date.now()-toy.start)/1000;if(e>6){toy=null;return null;}
+ if(toy.kind==='ball'){const bx=W*.2+((Math.sin(e*1.3)+1)/2)*W*.55,by=H-14*s-Math.abs(Math.sin(e*5))*14*s;sprite(c,['.RRR.','RRWRR','RRRRR','WWWWW','.RRR.'],bx,by,s*1.5|0||1,PAL);return {target:bx-8*s};}
+ if(toy.kind==='feather'){const fx=cx+10*s+Math.sin(e*3)*6*s,fy=H-44*s+Math.cos(e*4)*4*s;sprite(c,['....BB','...BBB','..BBB.','.BBB..','G.....'],fx,fy,s,{B:'#4f7f9c',G:'#3a3026'});return {hop:true};}
+ const n=Math.min(5,Math.floor(e*1.2)+1),fall=e>5;['R','N','A','O','R'].slice(0,n).forEach((k,i)=>{const bx=cx+22*s+(fall?i*5*s:((i%2)*2*s)),by=fall?H-16*s:H-16*s-i*5*s;c.fillStyle=PAL[k];c.fillRect(bx,by,6*s,5*s);c.fillStyle='rgba(0,0,0,.15)';c.fillRect(bx,by+4*s,6*s,s);});
+ return {build:true};
+}
+// 手機模式：左半邊整個變成一支手機，小雞在螢幕裡滑影片
+function phoneScene(c,W,H,s,t){
+ c.fillStyle='#e7d9bd';c.fillRect(0,0,W,H);
+ const pw=Math.min(W*.74,(H*.92)*.52),ph=Math.min(H*.92,pw/.52),px0=(W-pw)/2,py0=(H-ph)/2;
+ c.fillStyle='#3a3026';c.fillRect(px0,py0,pw,ph);c.fillStyle='#2b2520';c.fillRect(px0+pw*.38,py0+2*s,pw*.24,2*s);
+ const sx=px0+3*s,sy=py0+6*s,sw=pw-6*s,sh=ph-12*s;c.fillStyle='#fdf6e3';c.fillRect(sx,sy,sw,sh);
+ c.save();c.beginPath();c.rect(sx,sy,sw,sh);c.clip();
+ const scroll=(t/40)%(18*s);const colors=['#f3c2b7','#bfe0a4','#bfe3ea','#ffe7ad'];
+ for(let i=-1;i<8;i++){const cy=sy+8*s+i*18*s-scroll;c.fillStyle=colors[(i+8+Math.floor(t/720))%4];c.fillRect(sx+3*s,cy,sw-6*s,14*s);c.fillStyle='rgba(58,48,38,.25)';c.fillRect(sx+5*s,cy+10*s,sw*.4,s);heart(c,sx+sw-10*s,cy+3*s,s);}
+ c.fillStyle='#d9772e';c.fillRect(sx,sy,sw,7*s);c.fillStyle='#fffaf0';c.fillRect(sx+3*s,sy+2*s,s,3*s);c.fillRect(sx+5*s,sy+2*s,s,3*s);c.fillRect(sx+8*s,sy+3*s,Math.min(sw-12*s,26*s),s);
+ const cs=Math.max(2,Math.round(sw/42)),cx=sx+sw/2-8*cs,cy=sy+sh-17*cs;c.fillStyle='rgba(253,246,227,.85)';c.fillRect(sx,cy-2*cs,sw,19*cs);
+ drawChick(c,cx,cy,cs,{eye:Math.floor(t/1500)%4===0?'happy':'open',wing:Math.floor(t/350)%2,feet:2,stage});
+ c.restore();c.fillStyle='#5b544b';c.fillRect(px0+pw*.4,py0+ph-4*s,pw*.2,s);
+}
+const scene={w:0,h:0,s:2,x:0,tx:0,face:1,next:0,last:0,chickBox:null};
+function stageFrame(ts){
+ const cv=$('stage'),c=cv.getContext&&cv.getContext('2d');if(!c){requestAnimationFrame(stageFrame);return;}
+ const dpr=window.devicePixelRatio||1,cw=cv.clientWidth,ch=cv.clientHeight;if(!cw||!ch){requestAnimationFrame(stageFrame);return;}
+ if(cv.width!==Math.round(cw*dpr)||cv.height!==Math.round(ch*dpr)){cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr);}
+ c.imageSmoothingEnabled=false;const W=cv.width,H=cv.height,s=Math.max(2,Math.floor(Math.min(W/150,H/120)));scene.s=s;
+ const t=reduced.matches?0:ts,m=mode(),now=Date.now(),dt=Math.min((ts-scene.last)/1000||0,.05);scene.last=ts;
+ if(m==='PHONE'){phoneScene(c,W,H,s,t);scene.chickBox=null;requestAnimationFrame(stageFrame);return;}
+ const tint=m==='STUDYING'?'read':m==='COMPUTER'?'type':'';const r=room(c,W,H,s,tint);
+ const cs=s*2,baseY=H-12*s-16*cs+2*cs;let cx=scene.x,face=scene.face,o={stage,face},bub=null;
+ const walk=(target,speed)=>{const d=target-scene.x;if(Math.abs(d)>2){scene.x+=Math.sign(d)*Math.min(Math.abs(d),speed*dt*s);scene.face=Math.sign(d);o.feet=Math.floor(ts/180)%2;return false;}return true;};
+ const toyInfo=toyDraw(c,W,H,s,r.floor,t,scene.x);
+ if(m==='READY'||m==='NOPLAN'||m==='WAITING'||(life&&!life.started&&m!=='PAUSED'&&m!=='AWAY')){
+  const ex=W/2-6*cs,ey=H-14*s-12*cs,wob=reduced.matches?0:(Math.floor(ts/400)%8===0?s:0);
+  // 先畫一圈深色當外框，淺色地毯上也看得清楚
+  for(const [ox,oy] of [[-1,0],[1,0],[0,-1],[0,1]])sprite(c,EGG,ex+wob+ox*s,ey+oy*s,cs,{W:'#8a7a62',H:'#8a7a62'});sprite(c,EGG,ex+wob,ey,cs,PAL);if(m==='WAITING')bubble(c,ex+10*cs,ey-6*cs,s,'z');else bubble(c,ex+10*cs,ey-6*cs,s,m==='READY'?'q':'star');scene.chickBox={x:ex,y:ey,w:12*cs,h:12*cs};requestAnimationFrame(stageFrame);return;
+ }
+ if(m==='DEAD'){cx=W/2-8*cs;o={...o,gray:true,eye:'x',halo:true,feet:2};c.save();drawChick(c,cx,baseY+4*cs,cs,o);c.restore();bubble(c,cx+15*cs,baseY-4*cs,s,'moon');}
+ else if(m==='AWAY'){cx=r.bed.x;o={...o,eye:'closed',feet:2,face:-1};drawChick(c,cx,r.bed.y-10*cs+(Math.floor(ts/900)%2?s:0),cs,o);zee(c,cx+14*cs,r.bed.y-14*cs-((ts/60)%(10*s)),s);}
+ else if(m==='STUDYING'){const at=W*.30;if(walk(at,40)){scene.face=1;o={...o,glasses:true,eye:Math.floor(ts/2600)%5===0?'closed':'open',feet:2};book(c,scene.x+13*cs,baseY+10*cs,s,Math.floor(ts/1300)%3===0);}else o.glasses=true;drawChick(c,scene.x,baseY+(o.feet===2&&Math.floor(ts/1300)%2?s:0),cs,{...o,face:scene.face});bub='book';}
+ else if(m==='COMPUTER'){const at=W*.24;if(walk(at,40)){scene.face=1;o={...o,feet:2,wing:Math.floor(ts/160)%2,eye:'open'};laptop(c,scene.x+15*cs,baseY+5*cs,s,ts);}drawChick(c,scene.x,baseY,cs,{...o,face:scene.face});}
+ else if(Date.now()<eatUntil){if(walk(r.bowl.x-14*cs,70)){scene.face=1;o={...o,peck:Math.floor(ts/260)%2,feet:0};}drawChick(c,scene.x,baseY,cs,{...o,face:scene.face});bub=null;}
+ else{
+  if(m==='PAUSED')bub='q';else if(life?.phase==='WEAK'||life?.phase==='TIRED'){bub=life.phase==='WEAK'?'sweat':'moon';o.eye='half';}
+  if(m==='PRESENT'||m==='PAUSED'){
+   if(toyInfo?.target!==undefined)walk(toyInfo.target,60);else if(!reduced.matches&&m==='PRESENT'){if(now>scene.next){scene.tx=W*(.15+Math.random()*.5);scene.next=now+5000+Math.random()*5000;}walk(scene.tx,life?.phase==='WEAK'?10:25);}
+  }
+  let y=baseY;if(toyInfo?.hop||now<celebrateUntil)y-=Math.abs(Math.sin(ts/150))*5*s,o.feet=2;
+  if(now<petUntil)o.eye='happy',bub='heart';drawChick(c,scene.x,y,cs,{...o,face:scene.face});
+ }
+ if(m!=='DEAD'&&m!=='AWAY'){scene.chickBox={x:scene.x,y:baseY,w:16*cs,h:16*cs};if(now<petUntil&&!reduced.matches)for(let i=0;i<3;i++)heart(c,scene.x+(3+i*5)*cs,baseY-((ts/12+i*40)%(20*s)),s);if(bub)bubble(c,scene.x+(scene.face>0?14:-8)*cs,baseY-6*cs,s,bub);if(now<celebrateUntil)for(let i=0;i<4;i++)bubble(c,scene.x+(i*6-4)*cs,baseY-10*cs-(i%2)*4*s,s,'star');}
+ requestAnimationFrame(stageFrame);
+}
+if(!scene.x)scene.x=200;
+// 休息全畫面：大大的小雞從旁邊走到中間，再睡著
+const restScene={start:0};
+function restFrame(ts){
+ const ov=$('restOverlay');if(!ov.hidden){const cv=$('restStage'),c=cv.getContext&&cv.getContext('2d');if(c&&cv.clientWidth){
+  const dpr=window.devicePixelRatio||1;cv.width=Math.round(cv.clientWidth*dpr);cv.height=Math.round(cv.clientHeight*dpr);c.imageSmoothingEnabled=false;
+  const W=cv.width,H=cv.height,s=Math.max(4,Math.floor(Math.min(W,H)*.5/16)),e=reduced.matches?99:(ts-restScene.start)/1000;
+  c.fillStyle='#25304a';c.fillRect(0,0,W,H);c.fillStyle='#fdf3d0';for(let i=0;i<40;i++){const x=(i*97)%W,y=(i*53)%(H*.6);if((Math.floor(ts/600)+i)%5)c.fillRect(x,y,Math.max(2,s/4),Math.max(2,s/4));}
+  sprite(c,['..MMM.','.MM...','MM....','MM....','MM....','.MM...','..MMM.'],W*.8,H*.1,Math.max(3,Math.round(s/2.5)),{M:'#fdf3d0'});
+  c.fillStyle='#3b4766';c.fillRect(0,H*.78,W,H*.22);
+  const end=W/2-8*s,startX=-16*s,p=Math.min(1,e/3.2),x=startX+(end-startX)*p,y=H*.78-13*s;
+  if(p<1)drawChick(c,x,y,s,{face:1,feet:Math.floor(ts/200)%2,stage});
+  else{drawChick(c,x,y+(Math.floor(ts/1100)%2?Math.max(1,s/4):0),s,{face:1,eye:'closed',feet:2,stage});for(let i=0;i<3;i++)zee(c,x+(13+i*3)*s,y-((ts/50+i*s*4)%(s*12))+2*s,Math.max(2,s/2),'#fdf3d0');}
+ }}
+ requestAnimationFrame(restFrame);
+}
+function drawStages(){const box=$('growthStages');box.replaceChildren(...GROWTH.map((g,i)=>{const d=document.createElement('div'),cv=document.createElement('canvas');cv.width=32;cv.height=32;const c=cv.getContext&&cv.getContext('2d');if(c){if(i===0)sprite(c,EGG,4,4,2,PAL);else drawChick(c,0,2,2,{stage:i});}d.className=(i<=stage?'reached ':'')+(i===stage?'current':'');d.append(cv,document.createTextNode(g[0]));return d;}));}
+function exportCsv(){
+ const rows=[['時間','事件']].concat([...memories].reverse().map(m=>[m.at.toLocaleString('zh-TW',{hour12:false}),m.text]));
+ const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='啾啾紀錄.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+// 點在小雞身上才算摸摸
+function stageClick(ev){
+ if(!palmMode)return;const cv=$('stage'),r=cv.getBoundingClientRect(),k=cv.width/(r.width||1),x=(ev.clientX-r.left)*k,y=(ev.clientY-r.top)*k,b=scene.chickBox;
+ if(b&&x>=b.x-8&&x<=b.x+b.w+8&&y>=b.y-8&&y<=b.y+b.h+8)petChick();
+}
+$('stage').addEventListener('pointerdown',stageClick);
+$('palmButton').onclick=()=>{palmMode=!palmMode;if(palmMode){toast('手掌模式：點一下左邊的啾啾摸摸牠。');petChick();}render();};
+$('feedButton').onclick=feed;
+$('toyButton').onclick=()=>{const open=$('toys').classList.toggle('hidden');$('toyButton').setAttribute('aria-expanded',String(!open));};
+document.querySelectorAll('[data-toy]').forEach(b=>b.onclick=()=>playToy(b.dataset.toy));
+$('planForm').addEventListener('submit',startPlan);$('stopButton').onclick=stopPlan;
+$('planForm').addEventListener('input',()=>{formTouched=true;validateForm();});
+document.querySelectorAll('input[name=startMode]').forEach(r=>r.onchange=()=>{$('startAt').disabled=r.value!=='at'||!r.checked;validateForm();});
+$('soundButton').onclick=async()=>{soundEnabled=!soundEnabled;$('soundLabel').textContent=soundEnabled?'叫聲：開':'叫聲：關';$('soundButton').setAttribute('aria-pressed',String(soundEnabled));if(soundEnabled)await enableAudio();};
+$('exportButton').onclick=exportCsv;$('connectButton').onclick=connect;$('restClose').onclick=()=>{restDismissed=true;render();};
+$('openHome').onclick=()=>{try{const value=$('homeAddress').value.trim(),url=new URL(value.includes('://')?value:'http://'+value);if(url.protocol!=='http:'||!url.hostname||url.username||url.password||url.search||url.hash||url.pathname!=='/')throw Error();location.assign(url.href);}catch{toast('請輸入小屋的 Wi-Fi 位址，例如 192.168.1.88。');}};
+document.addEventListener('pointerdown',()=>enableAudio(),{once:true});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&networkEnabled){suppressSound=true;pollNetwork();}});
+setInterval(()=>{if(networkEnabled)pollNetwork();if(fresh()&&current.state==='PHONE')phoneSeconds++;render();},1000);
+drawStages();render();requestAnimationFrame(stageFrame);requestAnimationFrame(restFrame);connect();
 </script>
-</body></html>
+</body>
+</html>

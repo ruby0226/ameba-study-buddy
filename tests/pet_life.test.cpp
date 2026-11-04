@@ -37,12 +37,38 @@ constexpr bool pauseAndNoFreeRest() {
     c.tick(3000, AT_DESK, true);
     if (c.workMs != 1000) return false;
     c.tick(3200, AWAY, true); c.tick(3700, AWAY, true);
+    // 看不清楚時休息不增加，但已休息的部分保留
     c.tick(3900, UNKNOWN, true);
-    if (c.restMs != 0) return false;
-    c.tick(4100, AWAY, true); c.tick(4600, AWAY, true);
-    if (c.cycles != 0) return false;
-    c.tick(10000, AWAY, true);
-    return c.restMs == 0 && c.cycles == 0 && c.paused;
+    if (c.restMs != 500 || c.cycles != 0) return false;
+    c.tick(4100, AWAY, true);
+    if (c.restMs != 500) return false;
+    c.tick(4600, AWAY, true);
+    if (c.cycles != 1 || c.workMs != 0) return false;
+    // 回座才把沒休息完的進度歸零
+    Clock d(1000, 1000, 2000);
+    d.tick(0, AT_DESK, true); d.tick(1000, AT_DESK, true);
+    d.tick(1200, AWAY, true); d.tick(1700, AWAY, true);
+    d.tick(1900, UNKNOWN, true); d.tick(2100, AT_DESK, true);
+    if (d.restMs != 0) return false;
+    d.tick(10000, AWAY, true);
+    return d.restMs == 0 && d.paused;
+}
+// 死掉後離席，中途看不清楚幾次，仍能休息滿而重生
+constexpr bool deadRecoversThroughFlicker() {
+    Clock c(1000, 1000, 2000);
+    for (uint32_t n = 0; n <= 3000; n += 500) c.tick(n, AT_DESK, true);
+    if (!c.dead) return false;
+    uint32_t n = 3500;
+    // 每段只連續休息 300 ms 就被打斷，累積起來仍算數
+    for (int i = 0; i < 3; ++i) {
+        c.tick(n, AWAY, true); n += 300;
+        c.tick(n, AWAY, true); n += 300;
+        c.tick(n, UNKNOWN, true); n += 300;
+    }
+    if (!c.dead || c.restMs != 900) return false;
+    c.tick(n, AWAY, true); n += 300;
+    c.tick(n, AWAY, true);
+    return !c.dead && c.generation == 2 && c.energy == 100;
 }
 constexpr bool noFarming() {
     Clock c(1000, 1000, 2000);
@@ -61,5 +87,6 @@ constexpr bool rollover() {
 static_assert(deathAndRebirth(), "death, rest, rebirth and one-shot events");
 static_assert(shortBreakAndReward(), "short breaks preserve debt; full cycles reward growth");
 static_assert(pauseAndNoFreeRest(), "unknown, disconnection and stalls cannot punish or reward");
+static_assert(deadRecoversThroughFlicker(), "brief unknown frames while away cannot block rebirth");
 static_assert(noFarming(), "empty room and short visits cannot farm growth");
 static_assert(rollover(), "millis wraparound preserves elapsed time");
