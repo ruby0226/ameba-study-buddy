@@ -6,8 +6,9 @@ enum { CLASS_PERSON = 0, CLASS_TABLE = 60, CLASS_LAPTOP = 63,
        CLASS_MOUSE = 64, CLASS_REMOTE = 65, CLASS_KEYBOARD = 66,
        CLASS_PHONE = 67, CLASS_BOOK = 73 };
 // 書和手機 YOLO 分數常偏低，門檻放低靠追蹤和兩次確認擋誤判
-const int MIN_SCORE = 50, BOOK_MIN_SCORE = 20, PHONE_MIN_SCORE = 25;
-const int LAPTOP_MIN_SCORE = 40, CONTEXT_MIN_SCORE = 40, ASSIST_MIN_SCORE = 15;
+const int MIN_SCORE = 50, BOOK_MIN_SCORE = 20, PHONE_MIN_SCORE = 40;
+// 攤開的書常被看成筆電，筆電要更高分才算
+const int LAPTOP_MIN_SCORE = 60, CONTEXT_MIN_SCORE = 40, ASSIST_MIN_SCORE = 15;
 
 struct Item { int type, score; float left, top, right, bottom; };
 struct Frame {
@@ -34,7 +35,7 @@ SCENE_FN bool valid(Item a) {
 }
 SCENE_FN int scoreThreshold(int type) {
     return type == CLASS_PERSON ? MIN_SCORE : type == CLASS_BOOK ? BOOK_MIN_SCORE :
-           type == CLASS_PHONE ? PHONE_MIN_SCORE : CONTEXT_MIN_SCORE;
+           type == CLASS_PHONE ? PHONE_MIN_SCORE : type == CLASS_LAPTOP ? LAPTOP_MIN_SCORE : CONTEXT_MIN_SCORE;
 }
 SCENE_FN float overlap(Item a, Item b) {
     const float w = larger(0, smaller(a.right, b.right) - larger(a.left, b.left));
@@ -83,7 +84,7 @@ SCENE_FN bool conflicting(Item a, const Item *items, unsigned count) {
         const bool rival = a.type == CLASS_BOOK
             ? (other.type == CLASS_KEYBOARD || other.type == CLASS_LAPTOP || other.type == CLASS_PHONE)
             : (other.type == CLASS_REMOTE || other.type == CLASS_MOUSE);
-        if (rival && valid(other) && other.score >= CONTEXT_MIN_SCORE &&
+        if (rival && valid(other) && other.score >= scoreThreshold(other.type) &&
             other.score >= a.score + 10 && overlap(a, other) >= 0.45f) return true;
     }
     return false;
@@ -99,18 +100,6 @@ SCENE_FN bool acceptPhone(Item a, const Item *items, unsigned count) {
     if (a.type != CLASS_PHONE || !valid(a) || conflicting(a, items, count)) return false;
     return a.score >= PHONE_MIN_SCORE ||
            (a.score >= ASSIST_MIN_SCORE && nearMainPerson(a, items, count));
-}
-
-// 主角附近的鍵盤加滑鼠，才算電腦線索
-SCENE_FN bool computerPair(Item key, const Item *items, unsigned count) {
-    if (!nearMainPerson(key, items, count)) return false;
-    for (unsigned i = 0; i < count; ++i) {
-        const Item mouse = items[i];
-        if (mouse.type != CLASS_MOUSE || mouse.score < CONTEXT_MIN_SCORE || !valid(mouse)) continue;
-        const float dx = cx(key) - cx(mouse), dy = cy(key) - cy(mouse);
-        if (dx * dx + dy * dy <= 0.30f * 0.30f && nearMainPerson(mouse, items, count)) return true;
-    }
-    return false;
 }
 
 SCENE_FN Frame evaluate(const Item *items, unsigned count) {
@@ -130,13 +119,11 @@ SCENE_FN Frame evaluate(const Item *items, unsigned count) {
         }
         if (a.score < CONTEXT_MIN_SCORE) continue;
         if (a.type == CLASS_TABLE) f.table = true;
-        if (a.type == CLASS_LAPTOP) f.laptop = true;
+        // 有筆電就算用電腦，鍵盤滑鼠不再當電腦線索
+        if (a.type == CLASS_LAPTOP && a.score >= LAPTOP_MIN_SCORE) f.laptop = f.computer = true;
         if (a.type == CLASS_REMOTE) f.remote = true;
         if (a.type == CLASS_MOUSE) f.mouse = true;
-        if (a.type == CLASS_KEYBOARD) {
-            f.keyboard = true;
-            f.computer = f.computer || computerPair(a, items, count);
-        }
+        if (a.type == CLASS_KEYBOARD) f.keyboard = true;
     }
     return f;
 }

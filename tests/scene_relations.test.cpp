@@ -12,7 +12,7 @@ constexpr Item mouse{CLASS_MOUSE, 80, .65f, .59f, .73f, .68f};
 
 constexpr Item emptyDesk[] = {person, table, key, mouse};
 static_assert(!evaluate(emptyDesk, 4).book && !evaluate(emptyDesk, 4).phone, "context cannot invent targets");
-static_assert(evaluate(emptyDesk, 4).computer, "keyboard and mouse near the same person support computer");
+static_assert(!evaluate(emptyDesk, 4).computer, "keyboard and mouse alone are not computer, only a laptop is");
 
 constexpr Item bookContext[] = {person, table, weakBook};
 static_assert(evaluate(bookContext, 3).bookAssist && evaluate(bookContext, 3).book, "nearby person and table support weak book");
@@ -40,7 +40,12 @@ constexpr Item mainPhone[] = {bystander, mainUser, {CLASS_PHONE, 17, .68f, .30f,
 static_assert(evaluate(mainPhone, 3).phone && evaluate(mainPhone, 3).phoneNear, "weak phone next to the main person counts");
 constexpr Item bystanderComputer[] = {mainUser, {CLASS_PERSON, 90, .0f, .40f, .30f, .99f},
     {CLASS_KEYBOARD, 80, .02f, .70f, .14f, .80f}, {CLASS_MOUSE, 80, .16f, .72f, .22f, .80f}};
-static_assert(!evaluate(bystanderComputer, 4).computer, "keyboard and mouse at a bystander are not computer work");
+static_assert(!evaluate(bystanderComputer, 4).computer, "keyboard and mouse never count as computer");
+// 攤開的書被看成 50 分的筆電：不算電腦，也不擋書
+constexpr Item bookAsLaptop[] = {person, table, {CLASS_BOOK, 30, .35f, .55f, .65f, .80f}, {CLASS_LAPTOP, 50, .35f, .55f, .65f, .80f}};
+static_assert(!evaluate(bookAsLaptop, 4).laptop && evaluate(bookAsLaptop, 4).book, "weak laptop is not computer and does not hide the book");
+constexpr Item realLaptop[] = {person, {CLASS_LAPTOP, 70, .30f, .50f, .70f, .85f}};
+static_assert(evaluate(realLaptop, 2).laptop && evaluate(realLaptop, 2).computer, "clear laptop is computer");
 constexpr Item keyboardConflict[] = {person, table, {CLASS_BOOK, 17, .30f, .56f, .62f, .72f}, key};
 static_assert(!evaluate(keyboardConflict, 4).book, "stronger overlapping keyboard blocks book");
 
@@ -59,14 +64,8 @@ static_assert(!evaluate(mouseConflict, 2).phone, "stronger mouse at same box blo
 constexpr Item remoteOnly[] = {person, table, {CLASS_REMOTE, 90, .42f, .57f, .50f, .74f}};
 static_assert(!evaluate(remoteOnly, 3).phone, "remote cannot become phone");
 
-constexpr Item loneKey[] = {person, key};
-static_assert(!evaluate(loneKey, 2).computer, "keyboard alone insufficient");
-constexpr Item farMouse[] = {person, key, {CLASS_MOUSE, 80, .83f, .84f, .89f, .94f}};
-static_assert(!evaluate(farMouse, 3).computer, "distant mouse not a pair");
-constexpr Item nobodyAtComputer[] = {key, mouse};
-static_assert(!evaluate(nobodyAtComputer, 2).computer, "computer context requires person");
-constexpr Item conflictingActivity[] = {person, table, key, mouse, {CLASS_BOOK, 75, .25f, .76f, .65f, .96f}};
-static_assert(evaluate(conflictingActivity, 5).book && evaluate(conflictingActivity, 5).computer, "both clues preserved for ambiguous state");
+constexpr Item conflictingActivity[] = {person, table, {CLASS_LAPTOP, 80, .30f, .40f, .70f, .70f}, {CLASS_BOOK, 75, .25f, .76f, .65f, .96f}};
+static_assert(evaluate(conflictingActivity, 4).book && evaluate(conflictingActivity, 4).computer, "both clues preserved for ambiguous state");
 constexpr Item invalidBoxes[] = {{CLASS_PHONE, 90, .5f, .5f, .4f, .7f}, {CLASS_BOOK, 90, .4f, .5f, 1.1f, .7f}};
 static_assert(!evaluate(invalidBoxes, 2).phone && !evaluate(invalidBoxes, 2).book, "invalid coordinates rejected");
 static_assert(!evaluate(nullptr, 0).person, "empty inference is a negative sample");

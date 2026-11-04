@@ -69,7 +69,6 @@ bool soundReady = false, lastNoisy = false;
 // 最近 5 秒要看到多少比例
 #define BOOK_MIN_PERCENT   15
 #define PHONE_MIN_PERCENT  25
-#define LAPTOP_MIN_PERCENT 40
 #define RESULT_STALE_MS 2000
 
 // 0 是全畫面，先別裁掉人
@@ -117,9 +116,9 @@ unsigned long objectFrameMs = 0;
 bool objectReceived = false;
 bool latestPerson = false, latestBook = false, latestPhone = false, latestLaptop = false;
 ObjectTracks objectTracks;
-DetectionEvidence phoneNearEvidence, computerEvidence;
+DetectionEvidence phoneNearEvidence;
 bool bookStable = false, phoneStable = false, laptopStable = false;
-bool phoneNearStable = false, computerStable = false;
+bool phoneNearStable = false;
 
 // 記住開始和最後看到的時間
 struct Hold {
@@ -232,7 +231,6 @@ void onObjects(std::vector<ObjectDetectionResult> results)
     updateHold(callbackPersonHold, frame.person, now);
     objectTracks.observe(items.data(), items.size(), now);
     phoneNearEvidence.observe(frame.phoneNear, now, PHONE_MIN_PERCENT);
-    computerEvidence.observe(frame.computer, now, LAPTOP_MIN_PERCENT);
     latestPerson = frame.person; latestBook = frame.book; latestPhone = frame.phone; latestLaptop = frame.laptop;
     latestObjects = results;
     objectFrameMs = now;
@@ -240,10 +238,10 @@ void onObjects(std::vector<ObjectDetectionResult> results)
     xSemaphoreGive(detectionMutex);
 }
 
-// 手機優先，其他依書本和電腦線索分類
+// 手機優先，再看書本，有筆電就算用電腦
 StudyState seatedState(void)
 {
-    return classifyActivity(phoneStable, bookStable, laptopStable || computerStable);
+    return classifyActivity(phoneStable, bookStable, laptopStable);
 }
 
 // 先看人在不在，再決定活動
@@ -277,10 +275,6 @@ const char *className(int type)
             return "laptop";
         case CLASS_TABLE:
             return "table";
-        case CLASS_KEYBOARD:
-            return "keyboard";
-        case CLASS_MOUSE:
-            return "mouse";
         case CLASS_REMOTE:
             return "remote";
         default:
@@ -443,13 +437,11 @@ void loop()
 #if USE_VISUAL_TRACK
     if (grayReady) visualHits += objectTracks.follow(grayCamera.frame, now);
 #endif
-    phoneNearEvidence.expire(now); computerEvidence.expire(now);
+    phoneNearEvidence.expire(now);
     bookStable = objectFresh && objectTracks.present(CLASS_BOOK);
     phoneStable = objectFresh && objectTracks.present(CLASS_PHONE);
     laptopStable = objectFresh && objectTracks.present(CLASS_LAPTOP);
     phoneNearStable = objectFresh && phoneNearEvidence.active && phoneStable;
-    computerStable = objectFresh && computerEvidence.active &&
-        objectTracks.present(CLASS_KEYBOARD) && objectTracks.present(CLASS_MOUSE);
     ObjectTracks::View tracked[ObjectTracks::CAPACITY]{};
     for (unsigned i=0; i<ObjectTracks::CAPACITY; ++i) tracked[i] = objectTracks.view(i, now);
 
@@ -630,7 +622,7 @@ void loop()
         csvLine += tail;
         for (int i = 0; i < 10; ++i) { csvLine += ','; csvLine += contextStats[i]; }
         csvLine += ','; csvLine += (int)phoneNearStable;
-        csvLine += ','; csvLine += (int)computerStable;
+        csvLine += ','; csvLine += (int)laptopStable;
         // 麥克風沒啟動就送 -1，網頁會顯示無資料
         snprintf(stateLine, sizeof(stateLine), "STATE,%lu,%s,%lu,%lu,%lu,%c,%d,%lu,%c,%lu,%d,%d,%d,%d,%d,%d,%s",
                now / 1000, stateName(state), deskMs / 1000, studyMs / 1000, computerMs / 1000, 'A', awayCount, lastAwayMs / 1000,

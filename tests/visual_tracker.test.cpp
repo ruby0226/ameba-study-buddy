@@ -33,25 +33,36 @@ constexpr bool removedObjectNotFound() {
 constexpr bool flatAreaNotTracked() {
     return !VisualTracker::capture(scene(0, 0, false), box).valid;
 }
-// YOLO 只框到一次，之後靠畫面一路跟著；拿走後 3 秒消失
+// YOLO 只框到一次，之後靠畫面跟著；拿走後 3 秒消失
 constexpr bool tracksWithoutYolo() {
     ObjectTracks t;
     t.observe(&box, 1, 100);
     t.follow(scene(60, 50), 150);
     int x = 60;
-    for (uint32_t n = 600; n <= 6600; n += 500) {
+    for (uint32_t n = 600; n <= 2600; n += 500) {
         t.observe(nullptr, 0, n);
         x += 1;
         t.follow(scene(x, 50), n);
     }
-    if (!t.present(CLASS_BOOK) || !t.view(0, 6600).visual) return false;
+    if (!t.present(CLASS_BOOK) || !t.view(0, 2600).visual) return false;
     const float moved = (t.tracks[0].box.left - box.left) * 160;
-    if (moved < 12.5f || moved > 13.5f) return false;
-    for (uint32_t n = 7100; n <= 9100; n += 500) { t.observe(nullptr, 0, n); t.follow(scene(0, 0, false), n); }
+    if (moved < 4.5f || moved > 5.5f) return false;
+    for (uint32_t n = 3100; n <= 5100; n += 500) { t.observe(nullptr, 0, n); t.follow(scene(0, 0, false), n); }
     if (!t.present(CLASS_BOOK)) return false;
-    t.observe(nullptr, 0, 9700); t.follow(scene(0, 0, false), 9700);
+    t.observe(nullptr, 0, 5700); t.follow(scene(0, 0, false), 5700);
     return !t.present(CLASS_BOOK);
 }
+// 畫面一直比對得到，YOLO 超過 5 秒沒再看到也要放棄，免得黏在背景上
+constexpr bool visualOnlyGivesUp() {
+    ObjectTracks t;
+    t.observe(&box, 1, 100);
+    t.follow(scene(60, 50), 150);
+    for (uint32_t n = 600; n <= 5100; n += 500) { t.observe(nullptr, 0, n); t.follow(scene(60, 50), n); }
+    if (!t.present(CLASS_BOOK)) return false;
+    t.observe(nullptr, 0, 5200); t.follow(scene(60, 50), 5200);
+    return !t.present(CLASS_BOOK);
+}
+static_assert(visualOnlyGivesUp(), "Visual-only tracking ends 5 s after the last YOLO hit");
 static_assert(findsShiftedObject(), "Template finds the object after it moves and the light changes");
 static_assert(removedObjectNotFound(), "Plain desk does not match a removed object");
 static_assert(flatAreaNotTracked(), "Featureless areas are never used as templates");

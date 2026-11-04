@@ -9,9 +9,11 @@ param(
     [int]$Count = 10,
     [int]$Seconds = 10,
     [string]$Setup = '',
-    [string]$Out = "$PSScriptRoot\..\第三週_測試紀錄.csv"
+    [string]$Out = ''
 )
 $ErrorActionPreference = 'Stop'
+# PowerShell 5.1 在參數預設值裡拿不到 PSScriptRoot，要在這裡才設定
+if (-not $Out) { $Out = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) '..\第三週_測試紀錄.csv' }
 $names = @{ STUDYING = '讀書'; COMPUTER = '電腦'; PHONE = '手機'; PRESENT = '在桌前'; AWAY = '離席'; UNSURE = '無法確認' }
 $rules = @($Expect.Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 foreach ($r in $rules) { if (-not $names.ContainsKey($r.TrimStart('!'))) { throw "不認得的狀態：$r" } }
@@ -74,6 +76,7 @@ for ($i = 1; $i -le $Count; $i++) {
         '是否符合預期' = $verdict; '備註' = $note; '時間' = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
     } | Export-Csv -Path $Out -Append -NoTypeInformation -Encoding UTF8
 }
+if (-not (Test-Path $Out)) { Write-Host "`n沒有記錄任何一次"; exit }
 $rows = @(Import-Csv $Out -Encoding UTF8 | Where-Object { $_.'條件' -eq $Condition })
 $pass = @($rows | Where-Object { $_.'是否符合預期' -eq '是' }).Count
 Write-Host "`n$Condition：$pass / $($rows.Count) 符合預期，紀錄在 $Out" -ForegroundColor Cyan

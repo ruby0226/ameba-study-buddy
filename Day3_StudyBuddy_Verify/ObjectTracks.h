@@ -14,8 +14,8 @@
 struct ObjectTracks {
     enum { CAPACITY = 12, LOST_MS = 3000, STALE_MS = 2000, KEEP_MIN_SCORE = 15,
            LOCK_NOW_SCORE = 50, CONFIRM_MS = 2000, EXIT_MS = 1000,
-           // 只靠畫面比對最多撐這麼久，之後要 YOLO 再看到一次，免得跟著背景跑
-           VISUAL_MAX_MS = 60000, FRESH_BOX_MS = 300 };
+           // 只靠畫面比對最多撐 5 秒，之後要 YOLO 再看到一次，免得框黏在背景上
+           VISUAL_MAX_MS = 5000, FRESH_BOX_MS = 300 };
     struct Track {
         SceneRelations::Item box{0, 0, 0, 0, 0, 0};
         uint32_t id = 0, seen = 0, lockedAt = 0, yoloSeen = 0, templateAt = 0;
@@ -32,8 +32,8 @@ struct ObjectTracks {
         using namespace SceneRelations;
         if (a.type == CLASS_BOOK) return acceptBook(a, items, count);
         if (a.type == CLASS_PHONE) return acceptPhone(a, items, count);
-        return (a.type == CLASS_LAPTOP || a.type == CLASS_KEYBOARD || a.type == CLASS_MOUSE) &&
-            a.score >= CONTEXT_MIN_SCORE && valid(a);
+        return a.type == CLASS_LAPTOP &&
+            a.score >= scoreThreshold(a.type) && valid(a);
     }
     // 鎖定後只要同類、分數不太低、沒被別的東西蓋過，移動位置也跟著
     TRACK_FN static bool kept(SceneRelations::Item a, const SceneRelations::Item *items, unsigned count) {
